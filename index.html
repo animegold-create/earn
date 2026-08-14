@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>AnimeGold Login</title>
+  <title>Welcome to AnimeGold</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#111; color:#fff; text-align:center; }
+    button { margin:10px; padding:10px 20px; border-radius:5px; background:#ff9800; border:none; cursor:pointer; }
+  </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } 
+    import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } 
       from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc } 
+      from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
@@ -19,36 +25,56 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
 
-    // Watch login state
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // Already logged in → go to earn.html
-        window.location.href = "earn.html";
-      }
-    });
-
-    // Login with Google
-    window.login = async function() {
-      const provider = new GoogleAuthProvider();
-      try {
-        await signInWithPopup(auth, provider);
-        window.location.href = "earn.html";
-      } catch (err) {
-        console.error("Login failed:", err);
-        alert("Login error: " + err.message);
-      }
+    // Login
+    window.login = function() {
+      signInWithRedirect(auth, provider);
     }
 
     // Logout
-    window.logout = async function() {
-      await signOut(auth);
-      alert("Signed out.");
+    window.logout = function() {
+      signOut(auth).then(() => {
+        document.getElementById("status").innerText = "Not logged in.";
+      });
     }
+
+    // Handle redirect result
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result && result.user) {
+          const u = result.user;
+          const userRef = doc(db, "users", u.uid);
+
+          // Save Gmail name + email automatically
+          await setDoc(userRef, {
+            displayName: u.displayName,
+            email: u.email,
+            minuteCounter: 0
+          }, { merge: true });
+
+          document.getElementById("status").innerText =
+            "Logged in as: " + u.displayName + " (" + u.email + ")";
+        }
+      })
+      .catch((error) => {
+        console.error("Login error:", error);
+        alert("Login error: " + error.message);
+      });
+
+    // Keep session updated
+    onAuthStateChanged(auth, (u) => {
+      if (u) {
+        document.getElementById("status").innerText =
+          "Logged in as: " + u.displayName + " (" + u.email + ")";
+      }
+    });
   </script>
 </head>
 <body>
   <h1>Welcome to AnimeGold</h1>
+  <p id="status">Not logged in.</p>
   <button onclick="login()">Login with Google</button>
   <button onclick="logout()">Logout</button>
 </body>
