@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Earn Points</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#111; color:#fff; text-align:center; }
+    .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
+    .points-box { font-size:24px; margin-bottom:10px; }
+    .eligibility { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-top:20px; }
+    .card { background:#333; padding:15px; border-radius:8px; width:180px; }
+    .card h3 { margin:0 0 10px; font-size:16px; }
+    .card button { background:#ff9800; border:none; padding:8px 12px; border-radius:5px; cursor:pointer; }
+    .card button:disabled { background:#555; cursor:not-allowed; }
+  </style>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
+      authDomain: "animegold-bf2a7.firebaseapp.com",
+      projectId: "animegold-bf2a7",
+      storageBucket: "animegold-bf2a7.firebasestorage.app",
+      messagingSenderId: "1055086176557",
+      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4",
+      measurementId: "G-QLVB68T2XM"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let minuteCounter = 0;
+    let currentPoints = 0;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userRef);
+
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          document.getElementById("greeting").innerText = "Hello, " + data.displayName + "!";
+          currentPoints = data.points || 0;
+          minuteCounter = data.minuteCounter || 0;
+        }
+        updateUI();
+
+        // Auto tick every minute
+        setInterval(async () => {
+          minuteCounter++;
+          await setDoc(userRef, { minuteCounter }, { merge: true });
+          updateUI();
+
+          if (minuteCounter >= 60) {
+            currentPoints += 1;
+            minuteCounter = 0;
+            await setDoc(userRef, { points: currentPoints, minuteCounter: 0 }, { merge: true });
+            updateUI();
+          }
+        }, 60000);
+
+        // Reward claim handler
+        function claimReward(cost) {
+          if (currentPoints >= cost) {
+            alert("You claimed ₱" + cost + "!");
+            currentPoints -= cost;
+            setDoc(userRef, { points: currentPoints }, { merge: true });
+            updateUI();
+          }
+        }
+
+        // Attach buttons
+        document.getElementById("reward100").addEventListener("click", () => claimReward(100));
+        document.getElementById("reward200").addEventListener("click", () => claimReward(200));
+        document.getElementById("reward500").addEventListener("click", () => claimReward(500));
+        document.getElementById("reward1000").addEventListener("click", () => claimReward(1000));
+
+        function updateUI() {
+          document.getElementById("points").innerText = currentPoints;
+          document.getElementById("pesos").innerText = "₱" + currentPoints;
+          document.getElementById("progress").innerText = minuteCounter + " / 60 minutes";
+          document.getElementById("fractional").innerText = (minuteCounter/60).toFixed(2) + " point";
+
+          document.getElementById("reward100").disabled = currentPoints < 100;
+          document.getElementById("reward200").disabled = currentPoints < 200;
+          document.getElementById("reward500").disabled = currentPoints < 500;
+          document.getElementById("reward1000").disabled = currentPoints < 1000;
+        }
+      } else {
+        window.location.href = "index.html";
+      }
+    });
