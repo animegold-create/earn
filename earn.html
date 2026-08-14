@@ -33,6 +33,7 @@
 
     let minuteCounter = 0;
     let userRef, user;
+    let userData = {};
 
     onAuthStateChanged(auth, async (u) => {
       if (u) {
@@ -41,9 +42,9 @@
         const userDoc = await getDoc(userRef);
 
         if (userDoc.exists()) {
-          const data = userDoc.data();
-          document.getElementById("greeting").innerText = "Hello, " + (data.displayName || "User") + "!";
-          minuteCounter = data.minuteCounter || 0;
+          userData = userDoc.data();
+          document.getElementById("greeting").innerText = "Hello, " + (userData.displayName || "User") + "!";
+          minuteCounter = userData.minuteCounter || 0;
         } else {
           window.location.href = "setname.html";
         }
@@ -61,14 +62,15 @@
         async function claimReward(cost) {
           const calculatedPoints = minuteCounter / 60;
           if (calculatedPoints >= cost) {
-            alert("You claimed ₱" + cost + "!");
-            // Deduct minutes equivalent to cost
+            alert("You claimed ₱" + cost + "! It is now pending.");
             minuteCounter -= cost * 60;
-            await setDoc(userRef, { minuteCounter }, { merge: true });
 
-            const historyItem = { cost: cost, date: new Date().toISOString() };
-            await setDoc(doc(db, "users", user.uid, "claims", Date.now().toString()), historyItem);
+            await setDoc(userRef, {
+              minuteCounter,
+              pendingEarnings: (userData.pendingEarnings || 0) + cost
+            }, { merge: true });
 
+            userData.pendingEarnings = (userData.pendingEarnings || 0) + cost;
             updateUI();
             loadHistory();
           }
@@ -81,8 +83,10 @@
 
         function updateUI() {
           const calculatedPoints = minuteCounter / 60;
-          document.getElementById("points").innerText = Math.floor(calculatedPoints);
-          document.getElementById("fractional").innerText = calculatedPoints.toFixed(2) + " point";
+          document.getElementById("points").innerText = calculatedPoints.toFixed(2) + " points";
+
+          document.getElementById("pending").innerText = userData.pendingEarnings || 0;
+          document.getElementById("total").innerText = userData.totalEarnings || 0;
 
           document.getElementById("reward100").disabled = calculatedPoints < 100;
           document.getElementById("reward200").disabled = calculatedPoints < 200;
@@ -102,6 +106,18 @@
             historyList.appendChild(li);
           });
         }
+
+        // Admin-only function to mark payment
+        window.payUser = async function(amount) {
+          await setDoc(userRef, {
+            pendingEarnings: (userData.pendingEarnings || 0) - amount,
+            totalEarnings: (userData.totalEarnings || 0) + amount
+          }, { merge: true });
+
+          userData.pendingEarnings = (userData.pendingEarnings || 0) - amount;
+          userData.totalEarnings = (userData.totalEarnings || 0) + amount;
+          updateUI();
+        }
       } else {
         window.location.href = "index.html";
       }
@@ -116,10 +132,11 @@
 <body>
   <h1 id="greeting">Loading...</h1>
 
-  <!-- Points + Fractional -->
+  <!-- Points + Earnings -->
   <div class="section">
-    <p>Total Points: <span id="points">0</span></p>
-    <p>Fractional Progress: <span id="fractional">0.00 point</span></p>
+    <p>Total Points: <span id="points">0.00 points</span></p>
+    <p>Pending Earnings: ₱<span id="pending">0</span></p>
+    <p>Total Earnings: ₱<span id="total">0</span></p>
   </div>
 
   <!-- Rewards -->
@@ -152,8 +169,4 @@
     </select>
     <button onclick="loadSeries()">Load</button>
     <div style="margin-top:20px;">
-      <iframe id="seriesFrame" width="640" height="360" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
-    </div>
-  </div>
-</body>
-</html>
+      <iframe id="seriesFrame" width="640" height="360" frameborder="0" allow="autoplay; fullscreen" allowfullscreen>
