@@ -1,37 +1,69 @@
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged } 
-    from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-  import { getFirestore, doc, setDoc } 
-    from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AnimeGold - Login</title>
+  <style>
+    body { background:#111; color:#fff; text-align:center; font-family:Arial; }
+    .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
+    input { margin:10px; padding:8px; border-radius:5px; }
+    button { margin:10px; padding:10px 20px; background:#ff9800; border:none; border-radius:5px; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <div class="section">
+    <h1>Welcome to AnimeGold</h1>
+    <p>Please log in or sign up</p>
+    <input id="email" type="email" placeholder="Email"><br>
+    <input id="password" type="password" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+    <button onclick="signup()">Sign Up</button>
+  </div>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
-    authDomain: "animegold-bf2a7.firebaseapp.com",
-    projectId: "animegold-bf2a7",
-    storageBucket: "animegold-bf2a7.firebasestorage.app",
-    messagingSenderId: "1055086176557",
-    appId: "1:1055086176557:web:aca8f68412e95ef369cba4",
-    measurementId: "G-J9LX9WMPJK"
-  };
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const provider = new GoogleAuthProvider();
+    const firebaseConfig = {
+      apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
+      authDomain: "animegold-bf2a7.firebaseapp.com",
+      projectId: "animegold-bf2a7",
+      storageBucket: "animegold-bf2a7.firebasestorage.app",
+      messagingSenderId: "1055086176557",
+      appId: "1:1055086176557:web:aca8f68412e95ef369cba4",
+      measurementId: "G-J9LX9WMPJK"
+    };
 
-  window.login = () => signInWithRedirect(auth, provider);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-  getRedirectResult(auth).then(async (result) => {
-    if (result && result.user) {
-      const u = result.user;
-      const userRef = doc(db, "users", u.uid);
-      await setDoc(userRef, { email: u.email }, { merge: true });
-      window.location.href = "setupname.html";
-    }
-  });
+    window.login = () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          alert("Login successful!");
+          window.location.href = "earn.html";
+        })
+        .catch(err => alert("Error: " + err.message));
+    };
 
-  onAuthStateChanged(auth, (u) => {
-    if (u) window.location.href = "setupname.html";
-  });
-</script>
+    window.signup = () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      createUserWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          alert("Account created!");
+          window.location.href = "setupname.html";
+        })
+        .catch(err => alert("Error: " + err.message));
+    };
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // If already logged in, go straight to earn page
+        window.location.href = "earn.html";
+      }
+    });
+  </script>
+</body>
+</html>
