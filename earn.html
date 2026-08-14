@@ -5,6 +5,10 @@
   <style>
     body { font-family: Arial, sans-serif; background:#111; color:#fff; text-align:center; }
     .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
+    .eligibility { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-top:20px; }
+    .card { background:#333; padding:15px; border-radius:8px; width:180px; }
+    .card h3 { margin:0 0 10px; font-size:16px; }
+    .card button { background:#ff9800; border:none; padding:8px 12px; border-radius:5px; cursor:pointer; }
   </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
@@ -17,7 +21,8 @@
       projectId: "animegold-bf2a7",
       storageBucket: "animegold-bf2a7.firebasestorage.app",
       messagingSenderId: "1055086176557",
-      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4"
+      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4",
+      measurementId: "G-QLVB68T2XM"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -40,8 +45,7 @@
 
           if (userData.displayName) {
             document.getElementById("greeting").innerHTML =
-              "Hello, " + userData.displayName +
-              "! <button onclick=\"window.location.href='setname.html'\">Change Name</button>";
+              "Hello, " + userData.displayName + "!";
           } else {
             window.location.href = "setname.html";
           }
@@ -76,8 +80,18 @@
       if (userDoc.exists()) userData = userDoc.data();
       const calculatedPoints = minuteCounter / 60;
       document.getElementById("points").innerText = calculatedPoints.toFixed(2) + " points";
-      document.getElementById("pending").innerText = userData.pendingEarnings || 0;
-      document.getElementById("total").innerText = userData.totalEarnings || 0;
+    }
+
+    window.claimReward = async function(cost) {
+      const calculatedPoints = minuteCounter / 60;
+      if (calculatedPoints >= cost) {
+        alert("You claimed ₱" + cost + "!");
+        minuteCounter -= cost * 60;
+        await setDoc(userRef, { minuteCounter }, { merge: true });
+        updateUI();
+      } else {
+        alert("Not enough points yet!");
+      }
     }
   </script>
 </head>
@@ -86,8 +100,6 @@
 
   <div class="section">
     <p>Total Points: <span id="points">0.00 points</span></p>
-    <p>Pending Earnings: ₱<span id="pending">0</span></p>
-    <p>Total Earnings: ₱<span id="total">0</span></p>
   </div>
 
   <div class="section">
@@ -109,7 +121,8 @@
   </div>
 
   <div class="section">
-    <button onclick="window.location.href='rewards.html'">Go to Rewards & Payout</button>
-  </div>
-</body>
-</html>
+    <h2>Rewards</h2>
+    <div class="eligibility">
+      <div class="card"><h3>Reward ₱100</h3><p>Cost: 100 points</p><button onclick="claimReward(100)">Claim</button></div>
+      <div class="card"><h3>Reward ₱200</h3><p>Cost: 200 points</p><button onclick="claimReward(200)">Claim</button></div>
+      <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button onclick="claimReward(500)">Claim</
