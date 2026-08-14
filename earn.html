@@ -11,7 +11,7 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-    const firebaseConfig = { /* your config here */ };
+    const firebaseConfig = { /* your Firebase config here */ };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -79,7 +79,9 @@
   <div class="section">
     <h2>Watch Series</h2>
     <select id="seriesSelect">
+      <option value="https://trimz.tv/99-reinforced-wooden-stick?ep=1">Reinforced Wooden Stick</option>
       <option value="https://trimz.tv/the-gamer?ep=1">The Gamer</option>
+      <option value="https://trimz.tv/system-analyzer?ep=1">System Analyzer</option>
       <option value="https://trimz.tv/life-exe?ep=1">Life.exe</option>
       <option value="https://trimz.tv/slam-jam?ep=1">Slam Jam</option>
       <option value="https://trimz.tv/guardians-of-rokia?ep=1">Guardians of Rokia</option>
