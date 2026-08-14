@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Set Name</title>
+  <title>Set Display Name</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#111; color:#fff; text-align:center; }
+    .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
+    input, button { margin:10px; padding:8px; border-radius:5px; }
+    button { background:#ff9800; border:none; cursor:pointer; }
+  </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, collection, query, where, getDocs } 
+      from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
@@ -31,32 +38,41 @@
       }
     });
 
-    window.saveName = async function() {
-      if (!userRef) {
-        alert("Not connected yet.");
-        return;
-      }
-
-      const nameInput = document.getElementById("name").value.trim();
-      if (!nameInput) {
+    window.saveDisplayName = async function() {
+      const name = document.getElementById("nameInput").value.trim();
+      if (!name) {
         alert("Please enter a name.");
         return;
       }
 
-      try {
-        await setDoc(userRef, { displayName: nameInput, minuteCounter: 0 }, { merge: true });
-        alert("Saved!");
-        window.location.href = "earn.html";
-      } catch (err) {
-        console.error("Save failed:", err);
-        alert("Error saving name: " + err.message);
+      // Reserved names
+      const reserved = ["admin", "staff", "system"];
+      if (reserved.includes(name.toLowerCase())) {
+        alert("That name is reserved. Please choose another.");
+        return;
       }
+
+      // Check uniqueness
+      const q = query(collection(db, "users"), where("displayName", "==", name));
+      const snap = await getDocs(q);
+
+      if (!snap.empty) {
+        alert("That name is already taken. Please choose another.");
+        return;
+      }
+
+      // Save if unique
+      await setDoc(userRef, { displayName: name }, { merge: true });
+      alert("Name saved successfully!");
+      window.location.href = "earn.html";
     }
   </script>
 </head>
 <body>
-  <h1>Set Name</h1>
-  <input type="text" id="name" placeholder="Enter unique name">
-  <button onclick="saveName()">Save Name</button>
+  <h1>Set Your Display Name</h1>
+  <div class="section">
+    <input type="text" id="nameInput" placeholder="Enter display name" style="width:250px;"><br>
+    <button onclick="saveDisplayName()">Save Name</button>
+  </div>
 </body>
 </html>
