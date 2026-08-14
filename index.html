@@ -47,7 +47,6 @@
           const u = result.user;
           const userRef = doc(db, "users", u.uid);
 
-          // Save Gmail name + email automatically
           await setDoc(userRef, {
             displayName: u.displayName,
             email: u.email,
@@ -56,7 +55,7 @@
             totalEarnings: 0
           }, { merge: true });
 
-          // Direct redirect to earn.html
+          // ✅ Redirect to earn.html
           window.location.href = "earn.html";
         }
       })
@@ -68,7 +67,7 @@
     // Keep session updated
     onAuthStateChanged(auth, (u) => {
       if (u) {
-        // Already logged in → go straight to earn.html
+        // ✅ Already logged in → go straight to earn.html
         window.location.href = "earn.html";
       }
     });
