@@ -30,7 +30,6 @@
         if (userDoc.exists()) {
           userData = userDoc.data();
 
-          // ✅ Only redirect if no displayName yet
           if (userData.displayName) {
             document.getElementById("greeting").innerHTML =
               "Hello, " + userData.displayName +
