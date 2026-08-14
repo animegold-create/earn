@@ -7,7 +7,6 @@
     button { margin:10px; padding:10px 20px; border-radius:5px; background:#ff9800; border:none; cursor:pointer; }
   </style>
   <script type="module">
-    // Import Firebase SDKs
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
     import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } 
@@ -15,7 +14,6 @@
     import { getFirestore, doc, setDoc } 
       from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
       authDomain: "animegold-bf2a7.firebaseapp.com",
@@ -26,43 +24,30 @@
       measurementId: "G-J9LX9WMPJK"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
     const auth = getAuth(app);
     const db = getFirestore(app);
     const provider = new GoogleAuthProvider();
 
-    // Login
     window.login = () => signInWithRedirect(auth, provider);
+    window.logout = () => signOut(auth).then(() => document.getElementById("status").innerText = "Not logged in.");
 
-    // Logout
-    window.logout = () => signOut(auth).then(() => {
-      document.getElementById("status").innerText = "Not logged in.";
-    });
-
-    // Handle login redirect
     getRedirectResult(auth).then(async (result) => {
       if (result && result.user) {
         const u = result.user;
         const userRef = doc(db, "users", u.uid);
-
         await setDoc(userRef, {
           displayName: u.displayName,
-          email: u.email,
-          minuteCounter: 0,
-          pendingEarnings: 0,
-          totalEarnings: 0
+          email: u.email
         }, { merge: true });
-
-        // ✅ Direct redirect to earn.html
-        window.location.href = "earn.html";
+        // ✅ After login → go to payout.html first
+        window.location.href = "payout.html";
       }
     }).catch(err => alert("Login error: " + err.message));
 
-    // If already logged in, go straight to earn.html
     onAuthStateChanged(auth, (u) => {
-      if (u) window.location.href = "earn.html";
+      if (u) window.location.href = "payout.html";
     });
   </script>
 </head>
