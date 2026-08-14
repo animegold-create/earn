@@ -34,7 +34,7 @@
     let minuteCounter = 0;
     let userRef, user;
     let userData = {};
-    let watching = false; // NEW flag
+    let watching = false;
 
     onAuthStateChanged(auth, async (u) => {
       if (u) {
@@ -53,7 +53,6 @@
         updateUI();
         loadHistory();
 
-        // Only tick minutes if watching = true
         setInterval(async () => {
           if (watching) {
             minuteCounter++;
@@ -77,7 +76,7 @@
           }
         }
 
-        // Bind reward buttons
+        // Bind reward buttons (will connect in Part 2)
         document.getElementById("reward100").addEventListener("click", () => claimReward(100));
         document.getElementById("reward200").addEventListener("click", () => claimReward(200));
         document.getElementById("reward500").addEventListener("click", () => claimReward(500));
@@ -92,12 +91,6 @@
           document.getElementById("points").innerText = calculatedPoints.toFixed(2) + " points";
           document.getElementById("pending").innerText = userData.pendingEarnings || 0;
           document.getElementById("total").innerText = userData.totalEarnings || 0;
-          document.getElementById("reward100").disabled = calculatedPoints < 100;
-          document.getElementById("reward200").disabled = calculatedPoints < 200;
-          document.getElementById("reward500").disabled = calculatedPoints < 500;
-          document.getElementById("reward1000").disabled = calculatedPoints < 1000;
-          document.getElementById("reward2000").disabled = calculatedPoints < 2000;
-          document.getElementById("reward5000").disabled = calculatedPoints < 5000;
         }
 
         async function loadHistory() {
@@ -112,30 +105,20 @@
             historyList.appendChild(li);
           });
         }
-
-        // Admin-only function
-        window.payUser = async function(amount) {
-          await setDoc(userRef, {
-            pendingEarnings: (userData.pendingEarnings || 0) - amount,
-            totalEarnings: (userData.totalEarnings || 0) + amount
-          }, { merge: true });
-          userData.pendingEarnings = (userData.pendingEarnings || 0) - amount;
-          userData.totalEarnings = (userData.totalEarnings || 0) + amount;
-          updateUI();
-        }
       } else {
         window.location.href = "index.html";
       }
     });
 
-    window.loadSeries = function() {
+    window.startWatching = function() {
       const url = document.getElementById("seriesSelect").value;
       document.getElementById("seriesFrame").src = url;
+      watching = true;
     }
 
-    // NEW functions
-    window.startWatching = function() { watching = true; }
-    window.stopWatching = function() { watching = false; }
+    window.stopWatching = function() {
+      watching = false;
+    }
   </script>
 </head>
 <body>
@@ -159,7 +142,6 @@
       <option value="https://trimz.tv/slam-jam">Slam Jam</option>
       <option value="https://trimz.tv/guardians-of-rokia">Guardians of Rokia</option>
     </select>
-    <button onclick="loadSeries()">Load</button>
     <div style="margin-top:20px;">
       <iframe id="seriesFrame" width="640" height="360" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
     </div>
@@ -168,10 +150,17 @@
       <button onclick="stopWatching()">Stop Watching</button>
     </div>
   </div>
-
   <!-- Rewards -->
   <div class="section">
     <h2>Eligibility</h2>
     <div class="eligibility">
       <div class="card"><h3>Reward ₱100</h3><p>Cost: 100 points</p><button id="reward100">Claim</button></div>
-      <div class="card"><h3>Reward ₱200
+      <div class="card"><h3>Reward ₱200</h3><p>Cost: 200 points</p><button id="reward200">Claim</button></div>
+      <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button id="reward500">Claim</button></div>
+      <div class="card"><h3>Reward ₱1000</h3><p>Cost: 1000 points</p><button id="reward1000">Claim</button></div>
+      <div class="card"><h3>Reward ₱2000</h3><p>Cost: 2000 points</p><button id="reward2000">Claim</button></div>
+      <div class="card"><h3>Reward ₱5000</h3><p>Cost: 5000 points</p><button id="reward5000">Claim</button></div>
+    </div>
+  </div>
+</body>
+</html>
