@@ -5,7 +5,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
-    import { getAuth } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
     import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -23,14 +23,28 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    let currentUser = null;
+
+    // Wait until Firebase confirms the user is logged in
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+      } else {
+        // If no user, send back to login
+        window.location.href = "index.html";
+      }
+    });
+
     async function saveName() {
-      const user = auth.currentUser;
       const name = document.getElementById("username").value;
-      if (user && name) {
-        await setDoc(doc(db, "users", user.uid), { displayName: name }, { merge: true });
+      if (currentUser && name) {
+        await setDoc(doc(db, "users", currentUser.uid), { displayName: name }, { merge: true });
         window.location.href = "earn.html";
+      } else {
+        alert("Please log in first or enter a name.");
       }
     }
+
     window.saveName = saveName;
   </script>
 </head>
