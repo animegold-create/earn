@@ -150,7 +150,7 @@
     <p>Total Earnings: ₱<span id="total">0</span></p>
   </div>
 
-  <!-- Watch Series (default Reinforced Wooden Stick) -->
+  <!-- Watch Series (iframe loads only when user clicks) -->
   <div class="section">
     <h2>Watch Series</h2>
     <select id="seriesSelect">
@@ -163,10 +163,7 @@
     </select>
     <button onclick="loadSeries()">Load</button>
     <div style="margin-top:20px;">
-      <iframe id="seriesFrame" 
-              src="https://trimz.tv/99-reinforced-wooden-stick" 
-              width="640" height="360" frameborder="0" 
-              allow="autoplay; fullscreen" allowfullscreen></iframe>
+      <iframe id="seriesFrame" width="640" height="360" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
     </div>
   </div>
 
@@ -176,4 +173,5 @@
     <div class="eligibility">
       <div class="card"><h3>Reward ₱100</h3><p>Cost: 100 points</p><button id="reward100">Claim</button></div>
       <div class="card"><h3>Reward ₱200</h3><p>Cost: 200 points</p><button id="reward200">Claim</button></div>
-      <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p
+      <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button id="reward500">Claim</button></div>
+      <div class="card"><h3>Reward ₱1000</h
