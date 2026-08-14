@@ -37,6 +37,7 @@
     window.logout = function() {
       signOut(auth).then(() => {
         document.getElementById("status").innerText = "Not logged in.";
+        document.getElementById("earnBtn").style.display = "none";
       });
     }
 
@@ -55,8 +56,9 @@
             totalEarnings: 0
           }, { merge: true });
 
-          // ✅ Redirect to earn.html
-          window.location.href = "earn.html";
+          document.getElementById("status").innerText =
+            "Logged in as: " + u.displayName + " (" + u.email + ")";
+          document.getElementById("earnBtn").style.display = "inline-block";
         }
       })
       .catch((error) => {
@@ -67,8 +69,11 @@
     // Keep session updated
     onAuthStateChanged(auth, (u) => {
       if (u) {
-        // ✅ Already logged in → go straight to earn.html
-        window.location.href = "earn.html";
+        document.getElementById("status").innerText =
+          "Logged in as: " + u.displayName + " (" + u.email + ")";
+        document.getElementById("earnBtn").style.display = "inline-block";
+      } else {
+        document.getElementById("earnBtn").style.display = "none";
       }
     });
   </script>
@@ -78,5 +83,8 @@
   <p id="status">Not logged in.</p>
   <button onclick="login()">Login with Google</button>
   <button onclick="logout()">Logout</button>
+  <br><br>
+  <!-- Earn button only shows when logged in -->
+  <button id="earnBtn" style="display:none;" onclick="window.location.href='earn.html'">Go to Earn Page</button>
 </body>
 </html>
