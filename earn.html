@@ -5,18 +5,18 @@
   <style>
     body { font-family: Arial, sans-serif; background:#111; color:#fff; text-align:center; }
     .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
-    .points-box { font-size:24px; margin-bottom:10px; }
     .eligibility { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-top:20px; }
     .card { background:#333; padding:15px; border-radius:8px; width:180px; }
     .card h3 { margin:0 0 10px; font-size:16px; }
     .card button { background:#ff9800; border:none; padding:8px 12px; border-radius:5px; cursor:pointer; }
     .card button:disabled { background:#555; cursor:not-allowed; }
+    ul { list-style:none; padding:0; }
+    li { margin:5px 0; }
   </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
@@ -24,35 +24,34 @@
       projectId: "animegold-bf2a7",
       storageBucket: "animegold-bf2a7.firebasestorage.app",
       messagingSenderId: "1055086176557",
-      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4",
-      measurementId: "G-QLVB68T2XM"
+      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4"
     };
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
     let minuteCounter = 0;
     let currentPoints = 0;
+    let userRef, user;
 
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const userRef = doc(db, "users", user.uid);
+    onAuthStateChanged(auth, async (u) => {
+      if (u) {
+        user = u;
+        userRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userRef);
 
         if (userDoc.exists()) {
           const data = userDoc.data();
-          // ✅ Show saved name
           document.getElementById("greeting").innerText = "Hello, " + (data.displayName || "User") + "!";
           currentPoints = data.points || 0;
           minuteCounter = data.minuteCounter || 0;
         } else {
-          // If no name yet, redirect to setname.html
           window.location.href = "setname.html";
         }
 
         updateUI();
+        loadHistory();
 
         // Auto tick every minute
         setInterval(async () => {
@@ -68,26 +67,27 @@
           }
         }, 60000);
 
-        // Reward claim handler
-        function claimReward(cost) {
+        async function claimReward(cost) {
           if (currentPoints >= cost) {
             alert("You claimed ₱" + cost + "!");
             currentPoints -= cost;
-            setDoc(userRef, { points: currentPoints }, { merge: true });
+            await setDoc(userRef, { points: currentPoints }, { merge: true });
+
+            const historyItem = { cost: cost, date: new Date().toISOString() };
+            await setDoc(doc(db, "users", user.uid, "claims", Date.now().toString()), historyItem);
+
             updateUI();
+            loadHistory();
           }
         }
 
-        // Attach buttons
         document.getElementById("reward100").addEventListener("click", () => claimReward(100));
         document.getElementById("reward200").addEventListener("click", () => claimReward(200));
         document.getElementById("reward500").addEventListener("click", () => claimReward(500));
         document.getElementById("reward1000").addEventListener("click", () => claimReward(1000));
 
         function updateUI() {
-          document.getElementById("points").innerText = currentPoints;
-          document.getElementById("pesos").innerText = "₱" + currentPoints;
-          document.getElementById("progress").innerText = minuteCounter + " / 60 minutes";
+          // Show only fractional progress
           document.getElementById("fractional").innerText = (minuteCounter/60).toFixed(2) + " point";
 
           document.getElementById("reward100").disabled = currentPoints < 100;
@@ -95,47 +95,69 @@
           document.getElementById("reward500").disabled = currentPoints < 500;
           document.getElementById("reward1000").disabled = currentPoints < 1000;
         }
+
+        async function loadHistory() {
+          const claimsRef = collection(db, "users", user.uid, "claims");
+          const snapshot = await getDocs(claimsRef);
+          const historyList = document.getElementById("history");
+          historyList.innerHTML = "";
+          snapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            const li = document.createElement("li");
+            li.textContent = `₱${data.cost} claimed on ${new Date(data.date).toLocaleString()}`;
+            historyList.appendChild(li);
+          });
+        }
       } else {
         window.location.href = "index.html";
       }
     });
+
+    window.loadSeries = function() {
+      const url = document.getElementById("seriesSelect").value;
+      document.getElementById("seriesFrame").src = url;
+    }
   </script>
 </head>
 <body>
   <h1 id="greeting">Loading...</h1>
 
-  <!-- Top section: credits -->
+  <!-- Fractional point only -->
   <div class="section">
-    <div class="points-box">Your Points: <span id="points">0</span></div>
-    <div class="points-box">Equivalent Value: <span id="pesos">₱0</span></div>
-    <p id="progress">Progress: 0 / 60 minutes</p>
-    <p id="fractional">Fractional progress: 0 point</p>
+    <p id="fractional">0.00 point</p>
   </div>
 
-  <!-- Bottom section: eligibility -->
+  <!-- Rewards -->
   <div class="section">
     <h2>Eligibility</h2>
     <div class="eligibility">
-      <div class="card">
-        <h3>Reward ₱100</h3>
-        <p>Cost: 100 points</p>
-        <button id="reward100">Claim</button>
-      </div>
-      <div class="card">
-        <h3>Reward ₱200</h3>
-        <p>Cost: 200 points</p>
-        <button id="reward200">Claim</button>
-      </div>
-      <div class="card">
-        <h3>Reward ₱500</h3>
-        <p>Cost: 500 points</p>
-        <button id="reward500">Claim</button>
-      </div>
-      <div class="card">
-        <h3>Reward ₱1000</h3>
-        <p>Cost: 1000 points</p>
-        <button id="reward1000">Claim</button>
-      </div>
+      <div class="card"><h3>Reward ₱100</h3><p>Cost: 100 points</p><button id="reward100">Claim</button></div>
+      <div class="card"><h3>Reward ₱200</h3><p>Cost: 200 points</p><button id="reward200">Claim</button></div>
+      <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button id="reward500">Claim</button></div>
+      <div class="card"><h3>Reward ₱1000</h3><p>Cost: 1000 points</p><button id="reward1000">Claim</button></div>
+    </div>
+  </div>
+
+  <!-- Claim history -->
+  <div class="section">
+    <h2>Claim History</h2>
+    <ul id="history"></ul>
+  </div>
+
+  <!-- Trimz series selector -->
+  <div class="section">
+    <h2>Watch Series</h2>
+    <select id="seriesSelect">
+      <option value="https://trimz.tv/99-reinforced-wooden-stick">Reinforced Wooden Stick</option>
+      <option value="https://trimz.tv/the-gamer">The Gamer</option>
+      <option value="https://trimz.tv/system-analyzer">System Analyzer</option>
+      <option value="https://trimz.tv/life-exe">Life.exe</option>
+      <option value="https://trimz.tv/slam-jam">Slam Jam</option>
+      <option value="https://trimz.tv/guardians-of-rokia">Guardians of Rokia</option>
+    </select>
+    <button onclick="loadSeries()">Load</button>
+    <div style="margin-top:20px;">
+      <iframe id="seriesFrame" width="640" height="360" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
     </div>
   </div>
 </body>
