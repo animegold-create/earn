@@ -1,50 +1,20 @@
+<input id="name" placeholder="Enter name">
+<button onclick="saveName()">Save</button>
 <script type="module">
-  // 👉 Paste your firebaseConfig here
-  const firebaseConfig = {
-    apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
-    authDomain: "animegold-bf2a7.firebaseapp.com",
-    projectId: "animegold-bf2a7",
-    storageBucket: "animegold-bf2a7.firebasestorage.app",
-    messagingSenderId: "1055086176557",
-    appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4",
-    measurementId: "G-QLVB68T2XM"
-  };
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
+  const app = initializeApp({ /* your config */ });
   const auth = getAuth(app);
   const db = getFirestore(app);
 
   let userRef;
+  onAuthStateChanged(auth, u => { if (u) userRef = doc(db,"users",u.uid); });
 
-  onAuthStateChanged(auth, (u) => {
-    if (u) {
-      userRef = doc(db, "users", u.uid);
-    } else {
-      window.location.href = "index.html";
-    }
-  });
-
-  // 👉 Your saveName function goes right after this
-  window.saveName = async function() {
-    if (!userRef) {
-      alert("Not connected yet.");
-      return;
-    }
-
-    const nameInput = document.getElementById("name").value.trim();
-    if (!nameInput) {
-      alert("Please enter a name.");
-      return;
-    }
-
-    try {
-      await setDoc(userRef, { displayName: nameInput }, { merge: true });
-      alert("Saved!");
-      window.location.href = "earn.html";
-    } catch (err) {
-      console.error("Save failed:", err);
-      alert("Error saving name: " + err.message);
-    }
+  window.saveName = async () => {
+    const name = document.getElementById("name").value.trim();
+    await setDoc(userRef, { displayName: name, minuteCounter: 0 }, { merge:true });
+    window.location.href = "earn.html";
   }
 </script>
