@@ -12,6 +12,8 @@
     .card button:disabled { background:#555; cursor:not-allowed; }
     ul { list-style:none; padding:0; }
     li { margin:5px 0; }
+    input { margin:5px; padding:5px; border-radius:5px; border:none; }
+    button { margin-top:10px; }
   </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
@@ -46,6 +48,10 @@
           userData = userDoc.data();
           document.getElementById("greeting").innerText = "Hello, " + (userData.displayName || "User") + "!";
           minuteCounter = userData.minuteCounter || 0;
+
+          // preload payout info if saved
+          if (userData.payoutName) document.getElementById("fullName").value = userData.payoutName;
+          if (userData.payoutNumber) document.getElementById("payoutNumber").value = userData.payoutNumber;
         } else {
           window.location.href = "setname.html";
         }
@@ -76,13 +82,11 @@
           }
         }
 
-        // Bind reward buttons (connected in Part 2)
+        // Bind reward buttons
         document.getElementById("reward100").addEventListener("click", () => claimReward(100));
         document.getElementById("reward200").addEventListener("click", () => claimReward(200));
         document.getElementById("reward500").addEventListener("click", () => claimReward(500));
         document.getElementById("reward1000").addEventListener("click", () => claimReward(1000));
-        document.getElementById("reward2000").addEventListener("click", () => claimReward(2000));
-        document.getElementById("reward5000").addEventListener("click", () => claimReward(5000));
 
         async function updateUI() {
           const userDoc = await getDoc(userRef);
@@ -110,16 +114,27 @@
       }
     });
 
-    // Start watching only when iframe is clicked
-    window.onload = function() {
-      const frame = document.getElementById("seriesFrame");
-      frame.addEventListener("click", () => {
-        watching = true;
-      });
+    window.loadSeries = function() {
+      let url = document.getElementById("seriesSelect").value;
+      document.getElementById("seriesFrame").src = url;
+      watching = true; // start counting when Load is clicked
     }
 
-    window.stopWatching = function() {
-      watching = false;
+    async function savePayoutInfo() {
+      const name = document.getElementById("fullName").value.trim();
+      const number = document.getElementById("payoutNumber").value.trim();
+
+      if (!name || !number) {
+        alert("Please enter both your full name and payout number.");
+        return;
+      }
+
+      await setDoc(userRef, {
+        payoutName: name,
+        payoutNumber: number
+      }, { merge: true });
+
+      alert("Payout information saved!");
     }
   </script>
 </head>
@@ -145,13 +160,13 @@
       <option value="https://trimz.tv/guardians-of-rokia?ep=1">Guardians of Rokia</option>
     </select>
     <div style="margin-top:20px;">
-      <iframe id="seriesFrame" width="640" height="360" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+      <iframe id="seriesFrame" width="640" height="360" frameborder="0" allow="fullscreen" allowfullscreen></iframe>
     </div>
     <div style="margin-top:10px;">
-      <button onclick="document.getElementById('seriesFrame').src=document.getElementById('seriesSelect').value">Load Video</button>
-      <button onclick="stopWatching()">Stop Watching</button>
+      <button onclick="loadSeries()">Load</button>
     </div>
   </div>
+
   <!-- Rewards -->
   <div class="section">
     <h2>Eligibility</h2>
@@ -160,4 +175,16 @@
       <div class="card"><h3>Reward ₱200</h3><p>Cost: 200 points</p><button id="reward200">Claim</button></div>
       <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button id="reward500">Claim</button></div>
       <div class="card"><h3>Reward ₱1000</h3><p>Cost: 1000 points</p><button id="reward1000">Claim</button></div>
-      <div class="card"><h3>Reward ₱2000</h3><p>Cost: 2000 points</p><button id="reward2000">Claim</
+    </div>
+  </div>
+
+  <!-  <!-- Payout (separate section) -->
+  <div class="section">
+    <h2>Payout Information</h2>
+    <p>Please enter your full name and either GCash or Maya number for payouts.</p>
+    <input type="text" id="fullName" placeholder="Full Name" style="width:250px;"><br><br>
+    <input type="text" id="payoutNumber" placeholder="GCash or Maya Number" style="width:250px;"><br><br>
+    <button onclick="savePayoutInfo()">Save Payout Info</button>
+  </div>
+</body>
+</html>
