@@ -5,18 +5,12 @@
   <style>
     body { font-family: Arial, sans-serif; background:#111; color:#fff; text-align:center; }
     .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
-    .eligibility { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-top:20px; }
-    .card { background:#333; padding:15px; border-radius:8px; width:180px; }
-    .card h3 { margin:0 0 10px; font-size:16px; }
-    .card button { background:#ff9800; border:none; padding:8px 12px; border-radius:5px; cursor:pointer; }
-    .card button:disabled { background:#555; cursor:not-allowed; }
-    input, select { margin:5px; padding:5px; border-radius:5px; border:none; }
     button { margin-top:10px; }
   </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
@@ -44,19 +38,15 @@
 
         if (userDoc.exists()) {
           userData = userDoc.data();
-          document.getElementById("greeting").innerText = "Hello, " + (userData.displayName || "User") + "!";
+          document.getElementById("greeting").innerHTML = 
+            "Hello, " + (userData.displayName || "User") + 
+            "! <button onclick=\"window.location.href='setname.html'\">Change Name</button>";
           minuteCounter = userData.minuteCounter || 0;
-
-          // preload payout info if saved
-          if (userData.payoutName) document.getElementById("fullName").value = userData.payoutName;
-          if (userData.payoutMethod) document.getElementById("payoutMethod").value = userData.payoutMethod;
-          if (userData.payoutNumber) document.getElementById("payoutNumber").value = userData.payoutNumber;
         } else {
           window.location.href = "setname.html";
         }
 
         updateUI();
-        loadHistory();
 
         setInterval(async () => {
           if (watching) {
@@ -65,28 +55,6 @@
             updateUI();
           }
         }, 60000);
-
-        async function updateUI() {
-          const userDoc = await getDoc(userRef);
-          if (userDoc.exists()) userData = userDoc.data();
-          const calculatedPoints = minuteCounter / 60;
-          document.getElementById("points").innerText = calculatedPoints.toFixed(2) + " points";
-          document.getElementById("pending").innerText = userData.pendingEarnings || 0;
-          document.getElementById("total").innerText = userData.totalEarnings || 0;
-        }
-
-        async function loadHistory() {
-          const claimsRef = collection(db, "users", user.uid, "claims");
-          const snapshot = await getDocs(claimsRef);
-          const historyList = document.getElementById("history");
-          historyList.innerHTML = "";
-          snapshot.forEach(docSnap => {
-            const data = docSnap.data();
-            const li = document.createElement("li");
-            li.textContent = `₱${data.cost} claimed on ${new Date(data.date).toLocaleString()}`;
-            historyList.appendChild(li);
-          });
-        }
       } else {
         window.location.href = "index.html";
       }
@@ -95,44 +63,16 @@
     window.loadSeries = function() {
       let url = document.getElementById("seriesSelect").value;
       document.getElementById("seriesFrame").src = url;
-      watching = true; // start counting when Load is clicked
+      watching = true;
     }
 
-    // ---------------- Rewards Script ----------------
-    window.claimReward = async function(cost) {
+    async function updateUI() {
+      const userDoc = await getDoc(userRef);
+      if (userDoc.exists()) userData = userDoc.data();
       const calculatedPoints = minuteCounter / 60;
-      if (calculatedPoints >= cost) {
-        alert("You claimed ₱" + cost + "! It is now pending.");
-        minuteCounter -= cost * 60;
-        await setDoc(userRef, {
-          minuteCounter,
-          pendingEarnings: (userData.pendingEarnings || 0) + cost
-        }, { merge: true });
-        userData.pendingEarnings = (userData.pendingEarnings || 0) + cost;
-        const userDoc = await getDoc(userRef);
-        if (userDoc.exists()) userData = userDoc.data();
-        document.getElementById("pending").innerText = userData.pendingEarnings || 0;
-      }
-    }
-
-    // ---------------- Payout Script ----------------
-    window.savePayoutInfo = async function() {
-      const name = document.getElementById("fullName").value.trim();
-      const method = document.getElementById("payoutMethod").value;
-      const number = document.getElementById("payoutNumber").value.trim();
-
-      if (!name || !method || !number) {
-        alert("Please enter your full name, select a method, and enter the number.");
-        return;
-      }
-
-      await setDoc(userRef, {
-        payoutName: name,
-        payoutMethod: method,
-        payoutNumber: number
-      }, { merge: true });
-
-      alert("Payout information saved! (" + method + ")");
+      document.getElementById("points").innerText = calculatedPoints.toFixed(2) + " points";
+      document.getElementById("pending").innerText = userData.pendingEarnings || 0;
+      document.getElementById("total").innerText = userData.totalEarnings || 0;
     }
   </script>
 </head>
@@ -150,32 +90,22 @@
   <div class="section">
     <h2>Watch Series</h2>
     <select id="seriesSelect">
-      <option value="https://trimz.tv/99-reinforced-wooden-stick?ep=1">Reinforced Wooden Stick</option>
       <option value="https://trimz.tv/the-gamer?ep=1">The Gamer</option>
-      <option value="https://trimz.tv/system-analyzer?ep=1">System Analyzer</option>
       <option value="https://trimz.tv/life-exe?ep=1">Life.exe</option>
       <option value="https://trimz.tv/slam-jam?ep=1">Slam Jam</option>
       <option value="https://trimz.tv/guardians-of-rokia?ep=1">Guardians of Rokia</option>
     </select>
     <div style="margin-top:20px;">
-      <iframe id="seriesFrame" width="640" height="360" frameborder="0" allow="fullscreen" allowfullscreen></iframe>
+      <iframe id="seriesFrame" width="640" height="360" frameborder="0" allowfullscreen></iframe>
     </div>
     <div style="margin-top:10px;">
       <button onclick="loadSeries()">Load</button>
     </div>
   </div>
 
-  <!-- Rewards -->
+  <!-- Link to Rewards & Payout -->
   <div class="section">
-    <h2>Eligibility</h2>
-    <div class="eligibility">
-      <div class="card"><h3>Reward ₱100</h3><p>Cost: 100 points</p><button onclick="claimReward(100)">Claim</button></div>
-      <div class="card"><h3>Reward ₱200</h3><p>Cost: 200 points</p><button onclick="claimReward(200)">Claim</button></div>
-      <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button onclick="claimReward(500)">Claim</button></div>
-      <div class="card"><h3>Reward ₱1000</h3><p>Cost: 1000 points</p><button onclick="claimReward(1000)">Claim</button></div>
-    </div>
+    <button onclick="window.location.href='rewards.html'">Go to Rewards & Payout</button>
   </div>
-
-  <!-- Payout -->
-  <div class="section">
-    <h2>Payout Information</h2
+</body>
+</html>
