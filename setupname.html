@@ -1,0 +1,27 @@
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+  const firebaseConfig = { /* same config */ };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let userRef;
+
+  onAuthStateChanged(auth, (u) => {
+    if (u) {
+      userRef = doc(db, "users", u.uid);
+    } else {
+      window.location.href = "index.html";
+    }
+  });
+
+  window.saveName = async () => {
+    const chosenName = document.getElementById("nameInput").value.trim();
+    if (!chosenName) { alert("Please enter a name"); return; }
+    await setDoc(userRef, { userName: chosenName }, { merge: true });
+    window.location.href = "earn.html";
+  };
+</script>
