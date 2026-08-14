@@ -1,80 +1,50 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Set Name</title>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+<script type="module">
+  // 👉 Paste your firebaseConfig here
+  const firebaseConfig = {
+    apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
+    authDomain: "animegold-bf2a7.firebaseapp.com",
+    projectId: "animegold-bf2a7",
+    storageBucket: "animegold-bf2a7.firebasestorage.app",
+    messagingSenderId: "1055086176557",
+    appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4",
+    measurementId: "G-QLVB68T2XM"
+  };
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
-      authDomain: "animegold-bf2a7.firebaseapp.com",
-      projectId: "animegold-bf2a7",
-      storageBucket: "animegold-bf2a7.firebasestorage.app",
-      messagingSenderId: "1055086176557",
-      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4",
-      measurementId: "G-QLVB68T2XM"
-    };
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  let userRef;
 
-    let userRef;
-
-    onAuthStateChanged(auth, (u) => {
-      if (u) {
-        userRef = doc(db, "users", u.uid);
-      } else {
-        window.location.href = "index.html";
-      }
-    });
-
-    window.saveName = async function() {
-      if (!userRef) {
-        alert("Please wait, still connecting...");
-        return;
-      }
-
-      const nameInput = document.getElementById("name").value.trim();
-      if (!nameInput) {
-        alert("Please enter a name.");
-        return;
-      }
-
-      // Check uniqueness
-      const usersRef = collection(db, "users");
-      const snapshot = await getDocs(usersRef);
-      let nameTaken = false;
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        if (data.displayName && data.displayName.toLowerCase() === nameInput.toLowerCase()) {
-          nameTaken = true;
-        }
-      });
-
-      if (nameTaken) {
-        alert("That name is already taken. Please choose another.");
-        return;
-      }
-
-      try {
-        await setDoc(userRef, { displayName: nameInput }, { merge: true });
-        alert("Name saved successfully!");
-        setTimeout(() => {
-          window.location.href = "earn.html";
-        }, 500);
-      } catch (error) {
-        console.error("Error saving name:", error);
-        alert("Failed to save name. Check Firestore rules.");
-      }
+  onAuthStateChanged(auth, (u) => {
+    if (u) {
+      userRef = doc(db, "users", u.uid);
+    } else {
+      window.location.href = "index.html";
     }
-  </script>
-</head>
-<body>
-  <h1>Set Name</h1>
-  <input type="text" id="name" placeholder="Enter unique name">
-  <button onclick="saveName()">Save Name</button>
-</body>
-</html>
+  });
+
+  // 👉 Your saveName function goes right after this
+  window.saveName = async function() {
+    if (!userRef) {
+      alert("Not connected yet.");
+      return;
+    }
+
+    const nameInput = document.getElementById("name").value.trim();
+    if (!nameInput) {
+      alert("Please enter a name.");
+      return;
+    }
+
+    try {
+      await setDoc(userRef, { displayName: nameInput }, { merge: true });
+      alert("Saved!");
+      window.location.href = "earn.html";
+    } catch (err) {
+      console.error("Save failed:", err);
+      alert("Error saving name: " + err.message);
+    }
+  }
+</script>
