@@ -64,8 +64,9 @@
     async function updateUI() {
       const snap = await getDoc(userRef);
       if (snap.exists()) userData = snap.data();
+      // ✅ Slower earning: 1 point every 5 hours (300 minutes)
       document.getElementById("points").innerText =
-        (minuteCounter / 60).toFixed(2) + " points";
+        (minuteCounter / 300).toFixed(2) + " points";
       document.getElementById("pending").innerText =
         userData.pendingEarnings || 0;
       document.getElementById("total").innerText =
@@ -73,7 +74,7 @@
     }
 
     window.claimReward = async (cost) => {
-      const pts = minuteCounter / 60;
+      const pts = minuteCounter / 300; // matches slower earning
       const snap = await getDoc(userRef);
       let data = {};
       if (snap.exists()) data = snap.data();
@@ -85,7 +86,7 @@
 
       if (pts >= cost) {
         const newPending = (data.pendingEarnings || 0) + cost;
-        minuteCounter -= cost * 60;
+        minuteCounter -= cost * 300; // deduct minutes equivalent
         await setDoc(userRef, { minuteCounter, pendingEarnings: newPending }, { merge: true });
         alert("₱" + cost + " added to Pending Earnings for " +
               data.userName + " via " + data.payoutMethod + "!");
@@ -113,7 +114,7 @@
       <option value="https://trimz.tv/99-reinforced-wooden-stick?ep=1">+99 Reinforced Wooden Stick</option>
       <option value="https://trimz.tv/slam-jam?ep=1">Slam Jam</option>
       <option value="https://trimz.tv/guardians-of-rokia?ep=1">Guardians of Rokia</option>
-      <option value="https://trimz.tv/life-exe?ep=1">Life.exe</option>
+      <option value="https://trimz.tv/lifeexe?ep=1">Life.exe</option> <!-- ✅ fixed link -->
     </select>
     <div style="margin-top:20px;">
       <iframe id="seriesFrame" width="640" height="360" frameborder="0" allowfullscreen></iframe>
