@@ -84,18 +84,8 @@
 
     window.claimReward = async function(cost) {
       const calculatedPoints = minuteCounter / 60;
-      const userDoc = await getDoc(userRef);
-      let data = {};
-      if (userDoc.exists()) data = userDoc.data();
-
-      // Require payout info before claiming
-      if (!data.payoutMethod || !data.payoutNumber) {
-        alert("Please set up your payout info first!");
-        return;
-      }
-
       if (calculatedPoints >= cost) {
-        alert("You claimed ₱" + cost + " via " + data.payoutMethod + "!");
+        alert("You claimed ₱" + cost + "!");
         minuteCounter -= cost * 60;
         await setDoc(userRef, { minuteCounter }, { merge: true });
         updateUI();
@@ -138,11 +128,6 @@
       <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button onclick="claimReward(500)">Claim</button></div>
       <div class="card"><h3>Reward ₱1000</h3><p>Cost: 1000 points</p><button onclick="claimReward(1000)">Claim</button></div>
     </div>
-  </div>
-
-  <!-- Button to go to payout settings -->
-  <div class="section">
-    <button onclick="window.location.href='payout.html'">Go to Payout Settings</button>
   </div>
 </body>
 </html>
