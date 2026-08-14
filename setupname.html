@@ -1,27 +1,53 @@
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Setup Name - AnimeGold</title>
+  <style>
+    body { background:#111; color:#fff; text-align:center; font-family:Arial; }
+    input { margin:10px; padding:8px; border-radius:5px; }
+    button { margin:10px; padding:10px 20px; background:#ff9800; border:none; border-radius:5px; cursor:pointer; }
+  </style>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-  const firebaseConfig = { /* same config */ };
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+    const firebaseConfig = {
+      apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
+      authDomain: "animegold-bf2a7.firebaseapp.com",
+      projectId: "animegold-bf2a7",
+      storageBucket: "animegold-bf2a7.firebasestorage.app",
+      messagingSenderId: "1055086176557",
+      appId: "1:1055086176557:web:aca8f68412e95ef369cba4",
+      measurementId: "G-J9LX9WMPJK"
+    };
 
-  let userRef;
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-  onAuthStateChanged(auth, (u) => {
-    if (u) {
-      userRef = doc(db, "users", u.uid);
-    } else {
-      window.location.href = "index.html";
-    }
-  });
+    let userRef;
 
-  window.saveName = async () => {
-    const chosenName = document.getElementById("nameInput").value.trim();
-    if (!chosenName) { alert("Please enter a name"); return; }
-    await setDoc(userRef, { userName: chosenName }, { merge: true });
-    window.location.href = "earn.html";
-  };
-</script>
+    onAuthStateChanged(auth, (u) => {
+      if (u) {
+        userRef = doc(db, "users", u.uid);
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    window.saveName = async () => {
+      const chosenName = document.getElementById("nameInput").value.trim();
+      if (!chosenName) { alert("Please enter a name"); return; }
+      await setDoc(userRef, { userName: chosenName }, { merge: true });
+      window.location.href = "earn.html";
+    };
+  </script>
+</head>
+<body>
+  <h1>Choose Your Name</h1>
+  <input id="nameInput" placeholder="Enter your name">
+  <br>
+  <button onclick="saveName()">Confirm</button>
+</body>
+</html>
