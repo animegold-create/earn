@@ -10,9 +10,7 @@
     .card h3 { margin:0 0 10px; font-size:16px; }
     .card button { background:#ff9800; border:none; padding:8px 12px; border-radius:5px; cursor:pointer; }
     .card button:disabled { background:#555; cursor:not-allowed; }
-    ul { list-style:none; padding:0; }
-    li { margin:5px 0; }
-    input { margin:5px; padding:5px; border-radius:5px; border:none; }
+    input, select { margin:5px; padding:5px; border-radius:5px; border:none; }
     button { margin-top:10px; }
   </style>
   <script type="module">
@@ -51,6 +49,7 @@
 
           // preload payout info if saved
           if (userData.payoutName) document.getElementById("fullName").value = userData.payoutName;
+          if (userData.payoutMethod) document.getElementById("payoutMethod").value = userData.payoutMethod;
           if (userData.payoutNumber) document.getElementById("payoutNumber").value = userData.payoutNumber;
         } else {
           window.location.href = "setname.html";
@@ -66,27 +65,6 @@
             updateUI();
           }
         }, 60000);
-
-        async function claimReward(cost) {
-          const calculatedPoints = minuteCounter / 60;
-          if (calculatedPoints >= cost) {
-            alert("You claimed ₱" + cost + "! It is now pending.");
-            minuteCounter -= cost * 60;
-            await setDoc(userRef, {
-              minuteCounter,
-              pendingEarnings: (userData.pendingEarnings || 0) + cost
-            }, { merge: true });
-            userData.pendingEarnings = (userData.pendingEarnings || 0) + cost;
-            updateUI();
-            loadHistory();
-          }
-        }
-
-        // Bind reward buttons
-        document.getElementById("reward100").addEventListener("click", () => claimReward(100));
-        document.getElementById("reward200").addEventListener("click", () => claimReward(200));
-        document.getElementById("reward500").addEventListener("click", () => claimReward(500));
-        document.getElementById("reward1000").addEventListener("click", () => claimReward(1000));
 
         async function updateUI() {
           const userDoc = await getDoc(userRef);
@@ -120,22 +98,41 @@
       watching = true; // start counting when Load is clicked
     }
 
-    // expose to window so button works
+    // ---------------- Rewards Script ----------------
+    window.claimReward = async function(cost) {
+      const calculatedPoints = minuteCounter / 60;
+      if (calculatedPoints >= cost) {
+        alert("You claimed ₱" + cost + "! It is now pending.");
+        minuteCounter -= cost * 60;
+        await setDoc(userRef, {
+          minuteCounter,
+          pendingEarnings: (userData.pendingEarnings || 0) + cost
+        }, { merge: true });
+        userData.pendingEarnings = (userData.pendingEarnings || 0) + cost;
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) userData = userDoc.data();
+        document.getElementById("pending").innerText = userData.pendingEarnings || 0;
+      }
+    }
+
+    // ---------------- Payout Script ----------------
     window.savePayoutInfo = async function() {
       const name = document.getElementById("fullName").value.trim();
+      const method = document.getElementById("payoutMethod").value;
       const number = document.getElementById("payoutNumber").value.trim();
 
-      if (!name || !number) {
-        alert("Please enter both your full name and payout number.");
+      if (!name || !method || !number) {
+        alert("Please enter your full name, select a method, and enter the number.");
         return;
       }
 
       await setDoc(userRef, {
         payoutName: name,
+        payoutMethod: method,
         payoutNumber: number
       }, { merge: true });
 
-      alert("Payout information saved!");
+      alert("Payout information saved! (" + method + ")");
     }
   </script>
 </head>
@@ -172,13 +169,13 @@
   <div class="section">
     <h2>Eligibility</h2>
     <div class="eligibility">
-      <div class="card"><h3>Reward ₱100</h3><p>Cost: 100 points</p><button id="reward100">Claim</button></div>
-      <div class="card"><h3>Reward ₱200</h3><p>Cost: 200 points</p><button id="reward200">Claim</button></div>
-      <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button id="reward500">Claim</button></div>
-      <div class="card"><h3>Reward ₱1000</h3><p>Cost: 1000 points</p><button id="reward1000">Claim</button></div>
+      <div class="card"><h3>Reward ₱100</h3><p>Cost: 100 points</p><button onclick="claimReward(100)">Claim</button></div>
+      <div class="card"><h3>Reward ₱200</h3><p>Cost: 200 points</p><button onclick="claimReward(200)">Claim</button></div>
+      <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button onclick="claimReward(500)">Claim</button></div>
+      <div class="card"><h3>Reward ₱1000</h3><p>Cost: 1000 points</p><button onclick="claimReward(1000)">Claim</button></div>
     </div>
   </div>
 
-  <!-- Payout (separate section) -->
+  <!-- Payout -->
   <div class="section">
-    <h2>Payout Information</
+    <h2>Payout Information</h2
