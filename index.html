@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>AnimeGold - Login</title>
+  <title>AnimeGold Login</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } 
+      from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
@@ -13,28 +13,20 @@
       projectId: "animegold-bf2a7",
       storageBucket: "animegold-bf2a7.firebasestorage.app",
       messagingSenderId: "1055086176557",
-      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4",
-      measurementId: "G-QLVB68T2XM"
+      appId: "1:1055086176557:web:57eace7825d9e7a069cba4",
+      measurementId: "G-0QNF3XR7XH"
     };
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
     const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
 
-    async function login() {
-      try {
-        await signInWithPopup(auth, provider);
-        window.location.href = "setname.html";
-      } catch (error) {
-        console.error(error);
+    // Watch login state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Already logged in → go to earn.html
+        window.location.href = "earn.html";
       }
-    }
-    window.login = login;
-  </script>
-</head>
-<body style="background:#111;color:#fff;text-align:center;">
-  <h1>Welcome to AnimeGold</h1>
-  <button onclick="login()">Login with Gmail</button>
-</body>
-</html>
+    });
+
+    // Login with Google
+    window.login
