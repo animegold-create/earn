@@ -35,9 +35,9 @@
         const snap = await getDoc(userRef);
         if (snap.exists()) {
           const data = snap.data();
-          if (data.payoutMethod && data.payoutNumber) {
+          if (data.payoutName && data.payoutMethod && data.payoutNumber) {
             document.getElementById("payoutDisplay").innerText =
-              "Current: " + data.payoutMethod + " | " + data.payoutNumber;
+              "Current: " + data.payoutName + " | " + data.payoutMethod + " | " + data.payoutNumber;
           }
         }
       } else {
@@ -64,7 +64,7 @@
 
         alert("Payout info saved!");
         document.getElementById("payoutDisplay").innerText =
-          "Current: " + method + " | " + number;
+          "Current: " + name + " | " + method + " | " + number;
       } catch (err) {
         console.error("Save failed:", err);
         alert("Error: " + err.message);
