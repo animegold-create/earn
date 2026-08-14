@@ -17,15 +17,7 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
-      authDomain: "animegold-bf2a7.firebaseapp.com",
-      projectId: "animegold-bf2a7",
-      storageBucket: "animegold-bf2a7.firebasestorage.app",
-      messagingSenderId: "1055086176557",
-      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4"
-    };
-
+    const firebaseConfig = { /* your config here */ };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -50,29 +42,4 @@
         }
       } else {
         window.location.href = "index.html";
-      }
-    });
-
-    // Rewards
-    window.claimReward = async function(cost) {
-      const calculatedPoints = minuteCounter / 60;
-      if (calculatedPoints >= cost) {
-        alert("You claimed ₱" + cost + "! It is now pending.");
-        minuteCounter -= cost * 60;
-        await setDoc(userRef, {
-          minuteCounter,
-          pendingEarnings: (userData.pendingEarnings || 0) + cost
-        }, { merge: true });
-        userData.pendingEarnings = (userData.pendingEarnings || 0) + cost;
-        document.getElementById("pending").innerText = userData.pendingEarnings || 0;
-      }
-    }
-
-    // Payout
-    window.savePayoutInfo = async function() {
-      const name = document.getElementById("fullName").value.trim();
-      const method = document.getElementById("payoutMethod").value;
-      const number = document.getElementById("payoutNumber").value.trim();
-
-      if (!name || !method || !number) {
-        alert("Please enter your full name, select a method,
+     
