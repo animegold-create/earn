@@ -5,23 +5,19 @@
   <style>
     body { background:#111; color:#fff; text-align:center; font-family:Arial; }
     .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
-    input { margin:10px; padding:8px; border-radius:5px; }
     button { margin:10px; padding:10px 20px; background:#ff9800; border:none; border-radius:5px; cursor:pointer; }
   </style>
 </head>
 <body>
   <div class="section">
     <h1>Welcome to AnimeGold</h1>
-    <p>Please log in or sign up</p>
-    <input id="email" type="email" placeholder="Email"><br>
-    <input id="password" type="password" placeholder="Password"><br>
-    <button onclick="login()">Login</button>
-    <button onclick="signup()">Sign Up</button>
+    <p>Sign in with your Gmail account</p>
+    <button onclick="loginWithGoogle()">Login with Gmail</button>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
@@ -35,27 +31,16 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-    window.login = () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
+    window.loginWithGoogle = () => {
+      signInWithPopup(auth, provider)
+        .then((result) => {
           alert("Login successful!");
-          window.location.href = "earn.html";
-        })
-        .catch(err => alert("Error: " + err.message));
-    };
-
-    window.signup = () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      createUserWithEmailAndPassword(auth, email, password)
-        .then(() => {
-          alert("Account created!");
+          // After first login, send them to setupname.html to set display name
           window.location.href = "setupname.html";
         })
-        .catch(err => alert("Error: " + err.message));
+        .catch((err) => alert("Error: " + err.message));
     };
 
     onAuthStateChanged(auth, (user) => {
