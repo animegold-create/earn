@@ -13,7 +13,7 @@
   <div class="section">
     <h2>Set Your AnimeGold Name</h2>
     <input id="userName" placeholder="Enter your name"><br>
-    <button onclick="saveName()">Save Name</button>
+    <button id="confirmBtn">Confirm</button>
   </div>
 
   <script type="module">
@@ -40,21 +40,24 @@
     onAuthStateChanged(auth, (u) => {
       if (u) {
         userRef = doc(db, "users", u.uid);
+        document.getElementById("confirmBtn").onclick = async () => {
+          const name = document.getElementById("userName").value;
+          if (!name) {
+            alert("Please enter a name!");
+            return;
+          }
+          try {
+            await setDoc(userRef, { userName: name }, { merge: true });
+            alert("Name saved!");
+            window.location.href = "earn.html";
+          } catch (e) {
+            alert("Error: " + e.message);
+          }
+        };
       } else {
         window.location.href = "index.html";
       }
     });
-
-    window.saveName = async () => {
-      const name = document.getElementById("userName").value;
-      if (!name) {
-        alert("Please enter a name!");
-        return;
-      }
-      await setDoc(userRef, { userName: name }, { merge: true });
-      alert("Name saved!");
-      window.location.href = "earn.html"; // go to earn page after saving
-    };
   </script>
 </body>
 </html>
