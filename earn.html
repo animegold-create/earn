@@ -29,9 +29,16 @@
 
         if (userDoc.exists()) {
           userData = userDoc.data();
-          document.getElementById("greeting").innerHTML = 
-            "Hello, " + (userData.displayName || "User") + 
-            "! <button onclick=\"window.location.href='setname.html'\">Change Name</button>";
+
+          // ✅ Only redirect if no displayName yet
+          if (userData.displayName) {
+            document.getElementById("greeting").innerHTML =
+              "Hello, " + userData.displayName +
+              "! <button onclick=\"window.location.href='setname.html'\">Change Name</button>";
+          } else {
+            window.location.href = "setname.html";
+          }
+
           minuteCounter = userData.minuteCounter || 0;
         } else {
           window.location.href = "setname.html";
