@@ -7,14 +7,14 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-    // ✅ Your Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
       authDomain: "animegold-bf2a7.firebaseapp.com",
       projectId: "animegold-bf2a7",
       storageBucket: "animegold-bf2a7.firebasestorage.app",
       messagingSenderId: "1055086176557",
-      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4"
+      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4",
+      measurementId: "G-QLVB68T2XM"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -66,7 +66,7 @@
   </script>
 </head>
 <body>
-  <h1>Set or Change Name</h1>
+  <h1>Set Name</h1>
   <input type="text" id="name" placeholder="Enter unique name">
   <button onclick="saveName()">Save Name</button>
 </body>
