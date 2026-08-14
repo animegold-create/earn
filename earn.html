@@ -34,6 +34,7 @@
     let minuteCounter = 0;
     let userRef, user;
     let userData = {};
+    let watching = false; // NEW flag
 
     onAuthStateChanged(auth, async (u) => {
       if (u) {
@@ -52,34 +53,31 @@
         updateUI();
         loadHistory();
 
-        // Auto tick every minute
+        // Only tick minutes if watching = true
         setInterval(async () => {
-          minuteCounter++;
-          await setDoc(userRef, { minuteCounter }, { merge: true });
-          updateUI();
+          if (watching) {
+            minuteCounter++;
+            await setDoc(userRef, { minuteCounter }, { merge: true });
+            updateUI();
+          }
         }, 60000);
 
         async function claimReward(cost) {
           const calculatedPoints = minuteCounter / 60;
           if (calculatedPoints >= cost) {
             alert("You claimed ₱" + cost + "! It is now pending.");
-
-            // Deduct minutes equivalent to cost
             minuteCounter -= cost * 60;
-
-            // Update Firestore: only add to pending
             await setDoc(userRef, {
               minuteCounter,
               pendingEarnings: (userData.pendingEarnings || 0) + cost
             }, { merge: true });
-
             userData.pendingEarnings = (userData.pendingEarnings || 0) + cost;
             updateUI();
             loadHistory();
           }
         }
 
-        // Bind all reward buttons
+        // Bind reward buttons
         document.getElementById("reward100").addEventListener("click", () => claimReward(100));
         document.getElementById("reward200").addEventListener("click", () => claimReward(200));
         document.getElementById("reward500").addEventListener("click", () => claimReward(500));
@@ -90,13 +88,10 @@
         async function updateUI() {
           const userDoc = await getDoc(userRef);
           if (userDoc.exists()) userData = userDoc.data();
-
           const calculatedPoints = minuteCounter / 60;
           document.getElementById("points").innerText = calculatedPoints.toFixed(2) + " points";
-
           document.getElementById("pending").innerText = userData.pendingEarnings || 0;
           document.getElementById("total").innerText = userData.totalEarnings || 0;
-
           document.getElementById("reward100").disabled = calculatedPoints < 100;
           document.getElementById("reward200").disabled = calculatedPoints < 200;
           document.getElementById("reward500").disabled = calculatedPoints < 500;
@@ -118,13 +113,12 @@
           });
         }
 
-        // Admin-only function to mark payment
+        // Admin-only function
         window.payUser = async function(amount) {
           await setDoc(userRef, {
             pendingEarnings: (userData.pendingEarnings || 0) - amount,
             totalEarnings: (userData.totalEarnings || 0) + amount
           }, { merge: true });
-
           userData.pendingEarnings = (userData.pendingEarnings || 0) - amount;
           userData.totalEarnings = (userData.totalEarnings || 0) + amount;
           updateUI();
@@ -138,6 +132,10 @@
       const url = document.getElementById("seriesSelect").value;
       document.getElementById("seriesFrame").src = url;
     }
+
+    // NEW functions
+    window.startWatching = function() { watching = true; }
+    window.stopWatching = function() { watching = false; }
   </script>
 </head>
 <body>
@@ -150,7 +148,7 @@
     <p>Total Earnings: ₱<span id="total">0</span></p>
   </div>
 
-  <!-- Watch Series (iframe loads only when user clicks) -->
+  <!-- Watch Series -->
   <div class="section">
     <h2>Watch Series</h2>
     <select id="seriesSelect">
@@ -165,6 +163,10 @@
     <div style="margin-top:20px;">
       <iframe id="seriesFrame" width="640" height="360" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
     </div>
+    <div style="margin-top:10px;">
+      <button onclick="startWatching()">Start Watching</button>
+      <button onclick="stopWatching()">Stop Watching</button>
+    </div>
   </div>
 
   <!-- Rewards -->
@@ -172,6 +174,4 @@
     <h2>Eligibility</h2>
     <div class="eligibility">
       <div class="card"><h3>Reward ₱100</h3><p>Cost: 100 points</p><button id="reward100">Claim</button></div>
-      <div class="card"><h3>Reward ₱200</h3><p>Cost: 200 points</p><button id="reward200">Claim</button></div>
-      <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button id="reward500">Claim</button></div>
-      <div class="card"><h3>Reward ₱1000</h
+      <div class="card"><h3>Reward ₱200
