@@ -17,7 +17,7 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-    const firebaseConfig = { /* your config here */ };
+    const firebaseConfig = { /* your Firebase config here */ };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -41,5 +41,4 @@
           window.location.href = "setname.html";
         }
       } else {
-        window.location.href = "index.html";
-     
+        window.location
