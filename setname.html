@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Set Your Name</title>
+  <title>Set Display Name</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#111; color:#fff; text-align:center; }
+    .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
+    input, button { padding:10px; margin:10px; border-radius:5px; border:none; }
+    button { background:#ff9800; cursor:pointer; }
+  </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
@@ -14,54 +19,59 @@
       projectId: "animegold-bf2a7",
       storageBucket: "animegold-bf2a7.firebasestorage.app",
       messagingSenderId: "1055086176557",
-      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4",
-      measurementId: "G-QLVB68T2XM"
+      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4"
     };
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let currentUser = null;
+    let userRef;
 
-    // Wait until Firebase confirms the user is logged in
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
-        currentUser = user;
-        document.getElementById("status").innerText = "Logged in as " + user.email;
+        userRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userRef);
+
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+
+          // If displayName already set, skip setup
+          if (data.displayName) {
+            window.location.href = "earn.html";
+            return;
+          }
+        }
+
+        // Otherwise, show the name setup form
+        document.getElementById("status").innerText = "Please set your display name.";
+        document.getElementById("nameForm").style.display = "block";
       } else {
         window.location.href = "index.html";
       }
     });
 
     async function saveName() {
-      const name = document.getElementById("username").value.trim();
+      const name = document.getElementById("displayName").value.trim();
       if (!name) {
         alert("Please enter a name.");
         return;
       }
-      if (currentUser) {
-        try {
-          await setDoc(doc(db, "users", currentUser.uid), { displayName: name }, { merge: true });
-          alert("Name saved successfully!");
-          window.location.href = "earn.html";
-        } catch (error) {
-          console.error("Error saving name:", error);
-          alert("Failed to save name. Check Firestore rules.");
-        }
-      } else {
-        alert("User not logged in yet. Please wait a moment.");
-      }
+
+      await setDoc(userRef, { displayName: name }, { merge: true });
+      alert("Name saved successfully!");
+      window.location.href = "earn.html";
     }
 
     window.saveName = saveName;
   </script>
 </head>
-<body style="background:#111;color:#fff;text-align:center;">
-  <h1>Set Your Display Name</h1>
-  <p id="status">Checking login...</p>
-  <input type="text" id="username" placeholder="Enter your name">
-  <button onclick="saveName()">Save</button>
+<body>
+  <h1 id="status">Loading...</h1>
+
+  <div id="nameForm" class="section" style="display:none;">
+    <input type="text" id="displayName" placeholder="Enter your display name">
+    <button onclick="saveName()">Save Name</button>
+  </div>
 </body>
 </html>
