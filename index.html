@@ -51,11 +51,13 @@
           await setDoc(userRef, {
             displayName: u.displayName,
             email: u.email,
-            minuteCounter: 0
+            minuteCounter: 0,
+            pendingEarnings: 0,
+            totalEarnings: 0
           }, { merge: true });
 
-          document.getElementById("status").innerText =
-            "Logged in as: " + u.displayName + " (" + u.email + ")";
+          // Direct redirect to earn.html
+          window.location.href = "earn.html";
         }
       })
       .catch((error) => {
@@ -66,8 +68,8 @@
     // Keep session updated
     onAuthStateChanged(auth, (u) => {
       if (u) {
-        document.getElementById("status").innerText =
-          "Logged in as: " + u.displayName + " (" + u.email + ")";
+        // Already logged in → go straight to earn.html
+        window.location.href = "earn.html";
       }
     });
   </script>
