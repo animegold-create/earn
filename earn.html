@@ -42,21 +42,25 @@
 
         if (userDoc.exists()) {
           userData = userDoc.data();
-
-          if (userData.displayName) {
-            document.getElementById("greeting").innerHTML =
-              "Hello, " + userData.displayName + "!";
-          } else {
-            window.location.href = "setname.html";
-          }
-
-          minuteCounter = userData.minuteCounter || 0;
         } else {
-          window.location.href = "setname.html";
+          // Initialize new user doc with Gmail name
+          await setDoc(userRef, {
+            displayName: u.displayName,
+            email: u.email,
+            minuteCounter: 0,
+            pendingEarnings: 0,
+            totalEarnings: 0
+          });
+          userData = { displayName: u.displayName };
         }
 
+        document.getElementById("greeting").innerHTML =
+          "Hello, " + (userData.displayName || u.displayName) + "!";
+
+        minuteCounter = userData.minuteCounter || 0;
         updateUI();
 
+        // Add points every minute while watching
         setInterval(async () => {
           if (watching) {
             minuteCounter++;
@@ -92,7 +96,7 @@
       let data = {};
       if (userDoc.exists()) data = userDoc.data();
 
-      if (!data.payoutMethod || !data.payoutNumber) {
+      if (!data.payoutMethod || !data.payoutNumber || !data.payoutName) {
         alert("Please set up your payout info first!");
         return;
       }
@@ -106,7 +110,8 @@
           pendingEarnings: newPending
         }, { merge: true });
 
-        alert("₱" + cost + " added to Pending Earnings!");
+        alert("₱" + cost + " added to Pending Earnings for " +
+              data.payoutName + " via " + data.payoutMethod + "!");
         updateUI();
       } else {
         alert("Not enough points yet!");
