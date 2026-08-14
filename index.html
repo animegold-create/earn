@@ -1,0 +1,37 @@
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged } 
+    from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+  import { getFirestore, doc, setDoc } 
+    from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
+    authDomain: "animegold-bf2a7.firebaseapp.com",
+    projectId: "animegold-bf2a7",
+    storageBucket: "animegold-bf2a7.firebasestorage.app",
+    messagingSenderId: "1055086176557",
+    appId: "1:1055086176557:web:aca8f68412e95ef369cba4",
+    measurementId: "G-J9LX9WMPJK"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  window.login = () => signInWithRedirect(auth, provider);
+
+  getRedirectResult(auth).then(async (result) => {
+    if (result && result.user) {
+      const u = result.user;
+      const userRef = doc(db, "users", u.uid);
+      await setDoc(userRef, { email: u.email }, { merge: true });
+      window.location.href = "setupname.html";
+    }
+  });
+
+  onAuthStateChanged(auth, (u) => {
+    if (u) window.location.href = "setupname.html";
+  });
+</script>
