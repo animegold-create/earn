@@ -120,7 +120,8 @@
       watching = true; // start counting when Load is clicked
     }
 
-    async function savePayoutInfo() {
+    // expose to window so button works
+    window.savePayoutInfo = async function() {
       const name = document.getElementById("fullName").value.trim();
       const number = document.getElementById("payoutNumber").value.trim();
 
@@ -167,26 +168,17 @@
     </div>
   </div>
 
-  
-      <!-- Rewards -->
-<div class="section">
-  <h2>Eligibility</h2>
-  <div class="eligibility">
-    <div class="card"><h3>Reward ₱100</h3><p>Cost: 100 points</p><button id="reward100">Claim</button></div>
-    <div class="card"><h3>Reward ₱200</h3><p>Cost: 200 points</p><button id="reward200">Claim</button></div>
-    <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button id="reward500">Claim</button></div>
-    <div class="card"><h3>Reward ₱1000</h3><p>Cost: 1000 points</p><button id="reward1000">Claim</button></div>
+  <!-- Rewards -->
+  <div class="section">
+    <h2>Eligibility</h2>
+    <div class="eligibility">
+      <div class="card"><h3>Reward ₱100</h3><p>Cost: 100 points</p><button id="reward100">Claim</button></div>
+      <div class="card"><h3>Reward ₱200</h3><p>Cost: 200 points</p><button id="reward200">Claim</button></div>
+      <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button id="reward500">Claim</button></div>
+      <div class="card"><h3>Reward ₱1000</h3><p>Cost: 1000 points</p><button id="reward1000">Claim</button></div>
+    </div>
   </div>
-</div>
 
-<!-- Payout -->
-<div class="section">
-  <h2>Payout Information</h2>
-  <p>Please enter your full name and either GCash or Maya number for payouts.</p>
-  <input type="text" id="fullName" placeholder="Full Name" style="width:250px;"><br><br>
-  <input type="text" id="payoutNumber" placeholder="GCash or Maya Number" style="width:250px;"><br><br>
-  <button onclick="savePayoutInfo()">Save Payout Info</button>
-</div>
-</body>
-</html>
-
+  <!-- Payout (separate section) -->
+  <div class="section">
+    <h2>Payout Information</
