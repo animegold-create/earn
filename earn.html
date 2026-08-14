@@ -5,22 +5,13 @@
   <style>
     body { font-family: Arial, sans-serif; background:#111; color:#fff; text-align:center; }
     .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
-    button { margin-top:10px; }
   </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
-      authDomain: "animegold-bf2a7.firebaseapp.com",
-      projectId: "animegold-bf2a7",
-      storageBucket: "animegold-bf2a7.firebasestorage.app",
-      messagingSenderId: "1055086176557",
-      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4"
-    };
-
+    const firebaseConfig = { /* your config here */ };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -79,14 +70,12 @@
 <body>
   <h1 id="greeting">Loading...</h1>
 
-  <!-- Points + Earnings -->
   <div class="section">
     <p>Total Points: <span id="points">0.00 points</span></p>
     <p>Pending Earnings: ₱<span id="pending">0</span></p>
     <p>Total Earnings: ₱<span id="total">0</span></p>
   </div>
 
-  <!-- Watch Series -->
   <div class="section">
     <h2>Watch Series</h2>
     <select id="seriesSelect">
@@ -103,7 +92,6 @@
     </div>
   </div>
 
-  <!-- Link to Rewards & Payout -->
   <div class="section">
     <button onclick="window.location.href='rewards.html'">Go to Rewards & Payout</button>
   </div>
