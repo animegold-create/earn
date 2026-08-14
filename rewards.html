@@ -17,7 +17,17 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-    const firebaseConfig = { /* your Firebase config here */ };
+    // ✅ Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
+      authDomain: "animegold-bf2a7.firebaseapp.com",
+      projectId: "animegold-bf2a7",
+      storageBucket: "animegold-bf2a7.firebasestorage.app",
+      messagingSenderId: "1055086176557",
+      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4",
+      measurementId: "G-QLVB68T2XM"
+    };
+
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -35,4 +45,76 @@
         if (userDoc.exists()) {
           userData = userDoc.data();
           minuteCounter = userData.minuteCounter || 0;
-          document.getElementById("pending").innerText = user
+          document.getElementById("pending").innerText = userData.pendingEarnings || 0;
+          document.getElementById("total").innerText = userData.totalEarnings || 0;
+        } else {
+          window.location.href = "setname.html";
+        }
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    // ✅ Claim Reward
+    window.claimReward = async function(cost) {
+      const calculatedPoints = minuteCounter / 60;
+      if (calculatedPoints >= cost) {
+        alert("You claimed ₱" + cost + "! It is now pending.");
+        minuteCounter -= cost * 60;
+        await setDoc(userRef, {
+          minuteCounter,
+          pendingEarnings: (userData.pendingEarnings || 0) + cost
+        }, { merge: true });
+        userData.pendingEarnings = (userData.pendingEarnings || 0) + cost;
+        document.getElementById("pending").innerText = userData.pendingEarnings || 0;
+      } else {
+        alert("Not enough points yet!");
+      }
+    }
+
+    // ✅ Save Payout Info
+    window.savePayoutInfo = async function() {
+      const name = document.getElementById("fullName").value.trim();
+      const method = document.getElementById("payoutMethod").value;
+      const number = document.getElementById("payoutNumber").value.trim();
+
+      if (!name || !method || !number) {
+        alert("Please enter your full name, select a method, and enter the number.");
+        return;
+      }
+
+      await setDoc(userRef, {
+        payoutName: name,
+        payoutMethod: method,
+        payoutNumber: number
+      }, { merge: true });
+
+      alert("Payout information saved!");
+    }
+  </script>
+</head>
+<body>
+  <h1>Rewards & Payout</h1>
+
+  <div class="section">
+    <p>Pending Earnings: ₱<span id="pending">0</span></p>
+    <p>Total Earnings: ₱<span id="total">0</span></p>
+  </div>
+
+  <div class="section">
+    <h2>Eligibility</h2>
+    <div class="eligibility">
+      <div class="card"><h3>Reward ₱100</h3><p>Cost: 100 points</p><button onclick="claimReward(100)">Claim</button></div>
+      <div class="card"><h3>Reward ₱200</h3><p>Cost: 200 points</p><button onclick="claimReward(200)">Claim</button></div>
+      <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button onclick="claimReward(500)">Claim</button></div>
+      <div class="card"><h3>Reward ₱1000</h3><p>Cost: 1000 points</p><button onclick="claimReward(1000)">Claim</button></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Payout Information</h2>
+    <input type="text" id="fullName" placeholder="Full Name" style="width:250px;"><br><br>
+    <select id="payoutMethod" style="width:250px; padding:5px;">
+      <option value="">-- Select Method --</option>
+      <option value="GCash">GCash</option>
+      <option value="Maya">
