@@ -43,10 +43,15 @@
 
         if (userDoc.exists()) {
           const data = userDoc.data();
-          document.getElementById("greeting").innerText = "Hello, " + data.displayName + "!";
+          // ✅ Show saved name
+          document.getElementById("greeting").innerText = "Hello, " + (data.displayName || "User") + "!";
           currentPoints = data.points || 0;
           minuteCounter = data.minuteCounter || 0;
+        } else {
+          // If no name yet, redirect to setname.html
+          window.location.href = "setname.html";
         }
+
         updateUI();
 
         // Auto tick every minute
@@ -94,3 +99,44 @@
         window.location.href = "index.html";
       }
     });
+  </script>
+</head>
+<body>
+  <h1 id="greeting">Loading...</h1>
+
+  <!-- Top section: credits -->
+  <div class="section">
+    <div class="points-box">Your Points: <span id="points">0</span></div>
+    <div class="points-box">Equivalent Value: <span id="pesos">₱0</span></div>
+    <p id="progress">Progress: 0 / 60 minutes</p>
+    <p id="fractional">Fractional progress: 0 point</p>
+  </div>
+
+  <!-- Bottom section: eligibility -->
+  <div class="section">
+    <h2>Eligibility</h2>
+    <div class="eligibility">
+      <div class="card">
+        <h3>Reward ₱100</h3>
+        <p>Cost: 100 points</p>
+        <button id="reward100">Claim</button>
+      </div>
+      <div class="card">
+        <h3>Reward ₱200</h3>
+        <p>Cost: 200 points</p>
+        <button id="reward200">Claim</button>
+      </div>
+      <div class="card">
+        <h3>Reward ₱500</h3>
+        <p>Cost: 500 points</p>
+        <button id="reward500">Claim</button>
+      </div>
+      <div class="card">
+        <h3>Reward ₱1000</h3>
+        <p>Cost: 1000 points</p>
+        <button id="reward1000">Claim</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
