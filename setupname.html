@@ -6,7 +6,7 @@
     body { background:#111; color:#fff; text-align:center; font-family:Arial; }
     .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
     input { margin:10px; padding:8px; border-radius:5px; }
-    button { margin:10px; padding:10px 20px; background:#ff9800; border:none; border-radius:5px; cursor:pointer; }
+    button { margin:10px; padding:10px 20px; background:#ff9800; border:none; border-radius:5px; cursor:pointer; display:none; }
   </style>
 </head>
 <body>
@@ -19,7 +19,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
@@ -37,23 +37,32 @@
 
     let userRef;
 
-    onAuthStateChanged(auth, (u) => {
+    onAuthStateChanged(auth, async (u) => {
       if (u) {
         userRef = doc(db, "users", u.uid);
-        document.getElementById("confirmBtn").onclick = async () => {
-          const name = document.getElementById("userName").value;
-          if (!name) {
-            alert("Please enter a name!");
-            return;
-          }
-          try {
-            await setDoc(userRef, { userName: name }, { merge: true });
-            alert("Name saved!");
-            window.location.href = "earn.html";
-          } catch (e) {
-            alert("Error: " + e.message);
-          }
-        };
+        const snap = await getDoc(userRef);
+
+        if (snap.exists() && snap.data().userName) {
+          // ✅ Name already set → skip setup
+          window.location.href = "earn.html";
+        } else {
+          // ❌ No name yet → show input + button
+          document.getElementById("confirmBtn").style.display = "inline-block";
+          document.getElementById("confirmBtn").onclick = async () => {
+            const name = document.getElementById("userName").value;
+            if (!name) {
+              alert("Please enter a name!");
+              return;
+            }
+            try {
+              await setDoc(userRef, { userName: name }, { merge: true });
+              alert("Name saved!");
+              window.location.href = "earn.html";
+            } catch (e) {
+              alert("Error: " + e.message);
+            }
+          };
+        }
       } else {
         window.location.href = "index.html";
       }
