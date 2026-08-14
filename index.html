@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AnimeGold - Login</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
+      authDomain: "animegold-bf2a7.firebaseapp.com",
+      projectId: "animegold-bf2a7",
+      storageBucket: "animegold-bf2a7.firebasestorage.app",
+      messagingSenderId: "1055086176557",
+      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4",
+      measurementId: "G-QLVB68T2XM"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    async function login() {
+      try {
+        await signInWithPopup(auth, provider);
+        window.location.href = "setname.html";
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    window.login = login;
+  </script>
+</head>
+<body style="background:#111;color:#fff;text-align:center;">
+  <h1>Welcome to AnimeGold</h1>
+  <button onclick="login()">Login with Gmail</button>
+</body>
+</html>
