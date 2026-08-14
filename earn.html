@@ -32,7 +32,6 @@
     const db = getFirestore(app);
 
     let minuteCounter = 0;
-    let currentPoints = 0;
     let userRef, user;
 
     onAuthStateChanged(auth, async (u) => {
@@ -44,7 +43,6 @@
         if (userDoc.exists()) {
           const data = userDoc.data();
           document.getElementById("greeting").innerText = "Hello, " + (data.displayName || "User") + "!";
-          currentPoints = data.points || 0;
           minuteCounter = data.minuteCounter || 0;
         } else {
           window.location.href = "setname.html";
@@ -58,20 +56,15 @@
           minuteCounter++;
           await setDoc(userRef, { minuteCounter }, { merge: true });
           updateUI();
-
-          if (minuteCounter >= 60) {
-            currentPoints += 1;
-            minuteCounter = 0;
-            await setDoc(userRef, { points: currentPoints, minuteCounter: 0 }, { merge: true });
-            updateUI();
-          }
         }, 60000);
 
         async function claimReward(cost) {
-          if (currentPoints >= cost) {
+          const calculatedPoints = minuteCounter / 60;
+          if (calculatedPoints >= cost) {
             alert("You claimed ₱" + cost + "!");
-            currentPoints -= cost;
-            await setDoc(userRef, { points: currentPoints }, { merge: true });
+            // Deduct minutes equivalent to cost
+            minuteCounter -= cost * 60;
+            await setDoc(userRef, { minuteCounter }, { merge: true });
 
             const historyItem = { cost: cost, date: new Date().toISOString() };
             await setDoc(doc(db, "users", user.uid, "claims", Date.now().toString()), historyItem);
@@ -87,13 +80,14 @@
         document.getElementById("reward1000").addEventListener("click", () => claimReward(1000));
 
         function updateUI() {
-          // Show only fractional progress
-          document.getElementById("fractional").innerText = (minuteCounter/60).toFixed(2) + " point";
+          const calculatedPoints = minuteCounter / 60;
+          document.getElementById("points").innerText = Math.floor(calculatedPoints);
+          document.getElementById("fractional").innerText = calculatedPoints.toFixed(2) + " point";
 
-          document.getElementById("reward100").disabled = currentPoints < 100;
-          document.getElementById("reward200").disabled = currentPoints < 200;
-          document.getElementById("reward500").disabled = currentPoints < 500;
-          document.getElementById("reward1000").disabled = currentPoints < 1000;
+          document.getElementById("reward100").disabled = calculatedPoints < 100;
+          document.getElementById("reward200").disabled = calculatedPoints < 200;
+          document.getElementById("reward500").disabled = calculatedPoints < 500;
+          document.getElementById("reward1000").disabled = calculatedPoints < 1000;
         }
 
         async function loadHistory() {
@@ -122,9 +116,10 @@
 <body>
   <h1 id="greeting">Loading...</h1>
 
-  <!-- Fractional point only -->
+  <!-- Points + Fractional -->
   <div class="section">
-    <p id="fractional">0.00 point</p>
+    <p>Total Points: <span id="points">0</span></p>
+    <p>Fractional Progress: <span id="fractional">0.00 point</span></p>
   </div>
 
   <!-- Rewards -->
