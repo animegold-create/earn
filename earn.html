@@ -67,16 +67,14 @@
             // Deduct minutes equivalent to cost
             minuteCounter -= cost * 60;
 
-            // Update Firestore: add to pending + total
+            // Update Firestore: only add to pending
             await setDoc(userRef, {
               minuteCounter,
-              pendingEarnings: (userData.pendingEarnings || 0) + cost,
-              totalEarnings: (userData.totalEarnings || 0) + cost
+              pendingEarnings: (userData.pendingEarnings || 0) + cost
             }, { merge: true });
 
             // Update local data
             userData.pendingEarnings = (userData.pendingEarnings || 0) + cost;
-            userData.totalEarnings = (userData.totalEarnings || 0) + cost;
 
             updateUI();
             loadHistory();
@@ -114,13 +112,15 @@
           });
         }
 
-        // Admin-only function to mark payment (reset pending to 0)
-        window.payUser = async function() {
+        // Admin-only function to mark payment (move pending → total)
+        window.payUser = async function(amount) {
           await setDoc(userRef, {
-            pendingEarnings: 0
+            pendingEarnings: (userData.pendingEarnings || 0) - amount,
+            totalEarnings: (userData.totalEarnings || 0) + amount
           }, { merge: true });
 
-          userData.pendingEarnings = 0;
+          userData.pendingEarnings = (userData.pendingEarnings || 0) - amount;
+          userData.totalEarnings = (userData.totalEarnings || 0) + amount;
           updateUI();
         }
       } else {
