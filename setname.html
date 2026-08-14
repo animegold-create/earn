@@ -29,19 +29,29 @@
     onAuthStateChanged(auth, (user) => {
       if (user) {
         currentUser = user;
+        document.getElementById("status").innerText = "Logged in as " + user.email;
       } else {
-        // If no user, send back to login
         window.location.href = "index.html";
       }
     });
 
     async function saveName() {
-      const name = document.getElementById("username").value;
-      if (currentUser && name) {
-        await setDoc(doc(db, "users", currentUser.uid), { displayName: name }, { merge: true });
-        window.location.href = "earn.html";
+      const name = document.getElementById("username").value.trim();
+      if (!name) {
+        alert("Please enter a name.");
+        return;
+      }
+      if (currentUser) {
+        try {
+          await setDoc(doc(db, "users", currentUser.uid), { displayName: name }, { merge: true });
+          alert("Name saved successfully!");
+          window.location.href = "earn.html";
+        } catch (error) {
+          console.error("Error saving name:", error);
+          alert("Failed to save name. Check Firestore rules.");
+        }
       } else {
-        alert("Please log in first or enter a name.");
+        alert("User not logged in yet. Please wait a moment.");
       }
     }
 
@@ -50,6 +60,7 @@
 </head>
 <body style="background:#111;color:#fff;text-align:center;">
   <h1>Set Your Display Name</h1>
+  <p id="status">Checking login...</p>
   <input type="text" id="username" placeholder="Enter your name">
   <button onclick="saveName()">Save</button>
 </body>
