@@ -32,14 +32,18 @@
 
     onAuthStateChanged(auth, (u) => {
       if (u) {
+        console.log("User logged in:", u.uid);
         userRef = doc(db, "users", u.uid);
       } else {
+        console.log("No user logged in, redirecting...");
         window.location.href = "index.html";
       }
     });
 
     window.saveDisplayName = async function() {
       const name = document.getElementById("nameInput").value.trim();
+      console.log("Attempting to save name:", name);
+
       if (!name) {
         alert("Please enter a name.");
         return;
@@ -48,23 +52,32 @@
       // Reserved names
       const reserved = ["admin", "staff", "system"];
       if (reserved.includes(name.toLowerCase())) {
+        console.log("Blocked reserved name:", name);
         alert("That name is reserved. Please choose another.");
         return;
       }
 
       // Check uniqueness
+      console.log("Checking if name exists in Firestore...");
       const q = query(collection(db, "users"), where("displayName", "==", name));
       const snap = await getDocs(q);
 
       if (!snap.empty) {
+        console.log("Name already taken:", name);
         alert("That name is already taken. Please choose another.");
         return;
       }
 
       // Save if unique
-      await setDoc(userRef, { displayName: name }, { merge: true });
-      alert("Name saved successfully!");
-      window.location.href = "earn.html";
+      try {
+        console.log("Saving name to Firestore:", name);
+        await setDoc(userRef, { displayName: name }, { merge: true });
+        alert("Name saved successfully!");
+        window.location.href = "earn.html";
+      } catch (err) {
+        console.error("Save failed:", err);
+        alert("Error: " + err.message);
+      }
     }
   </script>
 </head>
