@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AnimeGold Login</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } 
+      from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
+      authDomain: "animegold-bf2a7.firebaseapp.com",
+      projectId: "animegold-bf2a7",
+      storageBucket: "animegold-bf2a7.firebasestorage.app",
+      messagingSenderId: "1055086176557",
+      appId: "1:1055086176557:web:57eace7825d9e7a069cba4",
+      measurementId: "G-0QNF3XR7XH"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Watch login state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Already logged in → go to earn.html
+        window.location.href = "earn.html";
+      }
+    });
+
+    // Login with Google
+    window.login = async function() {
+      const provider = new GoogleAuthProvider();
+      try {
+        await signInWithPopup(auth, provider);
+        window.location.href = "earn.html";
+      } catch (err) {
+        console.error("Login failed:", err);
+        alert("Login error: " + err.message);
+      }
+    }
+
+    // Logout
+    window.logout = async function() {
+      await signOut(auth);
+      alert("Signed out.");
+    }
+  </script>
+</head>
+<body>
+  <h1>Welcome to AnimeGold</h1>
+  <button onclick="login()">Login with Google</button>
+  <button onclick="logout()">Logout</button>
+</body>
+</html>
