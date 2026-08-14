@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rewards & Payout</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#111; color:#fff; text-align:center; }
+    .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
+    .eligibility { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-top:20px; }
+    .card { background:#333; padding:15px; border-radius:8px; width:180px; }
+    .card h3 { margin:0 0 10px; font-size:16px; }
+    .card button { background:#ff9800; border:none; padding:8px 12px; border-radius:5px; cursor:pointer; }
+    input, select { margin:5px; padding:5px; border-radius:5px; border:none; }
+    button { margin-top:10px; }
+  </style>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
+      authDomain: "animegold-bf2a7.firebaseapp.com",
+      projectId: "animegold-bf2a7",
+      storageBucket: "animegold-bf2a7.firebasestorage.app",
+      messagingSenderId: "1055086176557",
+      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let userRef, user;
+    let userData = {};
+    let minuteCounter = 0;
+
+    onAuthStateChanged(auth, async (u) => {
+      if (u) {
+        user = u;
+        userRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userRef);
+
+        if (userDoc.exists()) {
+          userData = userDoc.data();
+          minuteCounter = userData.minuteCounter || 0;
+          document.getElementById("pending").innerText = userData.pendingEarnings || 0;
+          document.getElementById("total").innerText = userData.totalEarnings || 0;
+        } else {
+          window.location.href = "setname.html";
+        }
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    // Rewards
+    window.claimReward = async function(cost) {
+      const calculatedPoints = minuteCounter / 60;
+      if (calculatedPoints >= cost) {
+        alert("You claimed ₱" + cost + "! It is now pending.");
+        minuteCounter -= cost * 60;
+        await setDoc(userRef, {
+          minuteCounter,
+          pendingEarnings: (userData.pendingEarnings || 0) + cost
+        }, { merge: true });
+        userData.pendingEarnings = (userData.pendingEarnings || 0) + cost;
+        document.getElementById("pending").innerText = userData.pendingEarnings || 0;
+      }
+    }
+
+    // Payout
+    window.savePayoutInfo = async function() {
+      const name = document.getElementById("fullName").value.trim();
+      const method = document.getElementById("payoutMethod").value;
+      const number = document.getElementById("payoutNumber").value.trim();
+
+      if (!name || !method || !number) {
+        alert("Please enter your full name, select a method,
