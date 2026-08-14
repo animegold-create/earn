@@ -53,6 +53,7 @@
         updateUI();
         loadHistory();
 
+        // Only tick minutes if watching = true
         setInterval(async () => {
           if (watching) {
             minuteCounter++;
@@ -76,7 +77,7 @@
           }
         }
 
-        // Bind reward buttons (will connect in Part 2)
+        // Bind reward buttons
         document.getElementById("reward100").addEventListener("click", () => claimReward(100));
         document.getElementById("reward200").addEventListener("click", () => claimReward(200));
         document.getElementById("reward500").addEventListener("click", () => claimReward(500));
@@ -91,6 +92,12 @@
           document.getElementById("points").innerText = calculatedPoints.toFixed(2) + " points";
           document.getElementById("pending").innerText = userData.pendingEarnings || 0;
           document.getElementById("total").innerText = userData.totalEarnings || 0;
+          document.getElementById("reward100").disabled = calculatedPoints < 100;
+          document.getElementById("reward200").disabled = calculatedPoints < 200;
+          document.getElementById("reward500").disabled = calculatedPoints < 500;
+          document.getElementById("reward1000").disabled = calculatedPoints < 1000;
+          document.getElementById("reward2000").disabled = calculatedPoints < 2000;
+          document.getElementById("reward5000").disabled = calculatedPoints < 5000;
         }
 
         async function loadHistory() {
@@ -111,7 +118,13 @@
     });
 
     window.startWatching = function() {
-      const url = document.getElementById("seriesSelect").value;
+      let url = document.getElementById("seriesSelect").value;
+      // Add autoplay + mute parameters
+      if (url.indexOf("?") === -1) {
+        url += "?autoplay=1&mute=1";
+      } else {
+        url += "&autoplay=1&mute=1";
+      }
       document.getElementById("seriesFrame").src = url;
       watching = true;
     }
@@ -164,3 +177,4 @@
   </div>
 </body>
 </html>
+
