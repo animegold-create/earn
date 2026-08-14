@@ -1,77 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Set Display Name</title>
-  <style>
-    body { font-family: Arial, sans-serif; background:#111; color:#fff; text-align:center; }
-    .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
-    input, button { padding:10px; margin:10px; border-radius:5px; border:none; }
-    button { background:#ff9800; cursor:pointer; }
-  </style>
+  <title>Set Name</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
-      authDomain: "animegold-bf2a7.firebaseapp.com",
-      projectId: "animegold-bf2a7",
-      storageBucket: "animegold-bf2a7.firebasestorage.app",
-      messagingSenderId: "1055086176557",
-      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4"
-    };
-
+    const firebaseConfig = { /* your config here */ };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let userRef;
+    let userRef, user;
 
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
+    onAuthStateChanged(auth, async (u) => {
+      if (u) {
+        user = u;
         userRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userRef);
-
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-
-          // If displayName already set, skip setup
-          if (data.displayName) {
-            window.location.href = "earn.html";
-            return;
-          }
-        }
-
-        // Otherwise, show the name setup form
-        document.getElementById("status").innerText = "Please set your display name.";
-        document.getElementById("nameForm").style.display = "block";
       } else {
         window.location.href = "index.html";
       }
     });
 
-    async function saveName() {
-      const name = document.getElementById("displayName").value.trim();
-      if (!name) {
+    window.saveName = async function() {
+      const nameInput = document.getElementById("name").value.trim();
+      if (!nameInput) {
         alert("Please enter a name.");
         return;
       }
 
-      await setDoc(userRef, { displayName: name }, { merge: true });
+      // Check uniqueness
+      const usersRef = collection(db, "users");
+      const snapshot = await getDocs(usersRef);
+      let nameTaken = false;
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.displayName && data.displayName.toLowerCase() === nameInput.toLowerCase()) {
+          nameTaken = true;
+        }
+      });
+
+      if (nameTaken) {
+        alert("That name is already taken. Please choose another.");
+        return;
+      }
+
+      await setDoc(userRef, { displayName: nameInput }, { merge: true });
       alert("Name saved successfully!");
       window.location.href = "earn.html";
     }
-
-    window.saveName = saveName;
   </script>
 </head>
 <body>
-  <h1 id="status">Loading...</h1>
-
-  <div id="nameForm" class="section" style="display:none;">
-    <input type="text" id="displayName" placeholder="Enter your display name">
-    <button onclick="saveName()">Save Name</button>
-  </div>
+  <h1>Set or Change Name</h1>
+  <input type="text" id="name" placeholder="Enter unique name">
+  <button onclick="saveName()">Save Name</button>
 </body>
 </html>
