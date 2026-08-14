@@ -110,16 +110,12 @@
       }
     });
 
-    window.startWatching = function() {
-      let url = document.getElementById("seriesSelect").value;
-      // Add autoplay + mute parameters
-      if (url.indexOf("?") === -1) {
-        url += "?autoplay=1&mute=1";
-      } else {
-        url += "&autoplay=1&mute=1";
-      }
-      document.getElementById("seriesFrame").src = url;
-      watching = true;
+    // Start watching only when iframe is clicked
+    window.onload = function() {
+      const frame = document.getElementById("seriesFrame");
+      frame.addEventListener("click", () => {
+        watching = true;
+      });
     }
 
     window.stopWatching = function() {
@@ -152,7 +148,7 @@
       <iframe id="seriesFrame" width="640" height="360" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
     </div>
     <div style="margin-top:10px;">
-      <button onclick="startWatching()">Start Watching</button>
+      <button onclick="document.getElementById('seriesFrame').src=document.getElementById('seriesSelect').value">Load Video</button>
       <button onclick="stopWatching()">Stop Watching</button>
     </div>
   </div>
@@ -164,5 +160,4 @@
       <div class="card"><h3>Reward ₱200</h3><p>Cost: 200 points</p><button id="reward200">Claim</button></div>
       <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button id="reward500">Claim</button></div>
       <div class="card"><h3>Reward ₱1000</h3><p>Cost: 1000 points</p><button id="reward1000">Claim</button></div>
-      <div class="card"><h3>Reward ₱2000</h3><p>Cost: 2000 points</p><button id="reward2000">Claim</button></div>
-      <div class="card"><h3>Reward ₱5000</h3><p>Cost: 5000 points</p><button id="reward
+      <div class="card"><h3>Reward ₱2000</h3><p>Cost: 2000 points</p><button id="reward2000">Claim</
