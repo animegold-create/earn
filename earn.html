@@ -87,7 +87,10 @@
         document.getElementById("reward2000").addEventListener("click", () => claimReward(2000));
         document.getElementById("reward5000").addEventListener("click", () => claimReward(5000));
 
-        function updateUI() {
+        async function updateUI() {
+          const userDoc = await getDoc(userRef);
+          if (userDoc.exists()) userData = userDoc.data();
+
           const calculatedPoints = minuteCounter / 60;
           document.getElementById("points").innerText = calculatedPoints.toFixed(2) + " points";
 
@@ -151,4 +154,26 @@
   <div class="section">
     <h2>Watch Series</h2>
     <select id="seriesSelect">
-      <option value="https://trimz.tv/99-reinforced-wooden-stick">Reinforced Wooden
+      <option value="https://trimz.tv/99-reinforced-wooden-stick">Reinforced Wooden Stick</option>
+      <option value="https://trimz.tv/the-gamer">The Gamer</option>
+      <option value="https://trimz.tv/system-analyzer">System Analyzer</option>
+      <option value="https://trimz.tv/life-exe">Life.exe</option>
+      <option value="https://trimz.tv/slam-jam">Slam Jam</option>
+      <option value="https://trimz.tv/guardians-of-rokia">Guardians of Rokia</option>
+    </select>
+    <button onclick="loadSeries()">Load</button>
+    <div style="margin-top:20px;">
+      <iframe id="seriesFrame" 
+              src="https://trimz.tv/99-reinforced-wooden-stick" 
+              width="640" height="360" frameborder="0" 
+              allow="autoplay; fullscreen" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <!-- Rewards -->
+  <div class="section">
+    <h2>Eligibility</h2>
+    <div class="eligibility">
+      <div class="card"><h3>Reward ₱100</h3><p>Cost: 100 points</p><button id="reward100">Claim</button></div>
+      <div class="card"><h3>Reward ₱200</h3><p>Cost: 200 points</p><button id="reward200">Claim</button></div>
+      <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p
