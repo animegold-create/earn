@@ -64,8 +64,8 @@
     async function updateUI() {
       const snap = await getDoc(userRef);
       if (snap.exists()) userData = snap.data();
-      // ✅ Add points every minute, but slower: 1 point = 300 minutes
-      const pointsEarned = (minuteCounter * (1/300)).toFixed(2);
+      // ✅ Show increments every minute (1 point = 300 minutes)
+      const pointsEarned = (minuteCounter / 300).toFixed(4);
       document.getElementById("points").innerText =
         pointsEarned + " points";
       document.getElementById("pending").innerText =
@@ -75,7 +75,7 @@
     }
 
     window.claimReward = async (cost) => {
-      const pts = minuteCounter * (1/300); // matches slower earning
+      const pts = minuteCounter / 300; // matches slower earning
       const snap = await getDoc(userRef);
       let data = {};
       if (snap.exists()) data = snap.data();
@@ -103,7 +103,7 @@
 <body>
   <h1 id="greeting">Loading...</h1>
   <div class="section">
-    <p>Total Points: <span id="points">0.00 points</span></p>
+    <p>Total Points: <span id="points">0.0000 points</span></p>
     <p>Pending Earnings: ₱<span id="pending">0</span></p>
     <p>Total Earnings: ₱<span id="total">0</span></p>
   </div>
