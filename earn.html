@@ -78,16 +78,35 @@
     async function updateUI() {
       const userDoc = await getDoc(userRef);
       if (userDoc.exists()) userData = userDoc.data();
+
       const calculatedPoints = minuteCounter / 60;
       document.getElementById("points").innerText = calculatedPoints.toFixed(2) + " points";
+
+      document.getElementById("pending").innerText = userData.pendingEarnings || 0;
+      document.getElementById("total").innerText = userData.totalEarnings || 0;
     }
 
     window.claimReward = async function(cost) {
       const calculatedPoints = minuteCounter / 60;
+      const userDoc = await getDoc(userRef);
+      let data = {};
+      if (userDoc.exists()) data = userDoc.data();
+
+      if (!data.payoutMethod || !data.payoutNumber) {
+        alert("Please set up your payout info first!");
+        return;
+      }
+
       if (calculatedPoints >= cost) {
-        alert("You claimed ₱" + cost + "!");
+        const newPending = (data.pendingEarnings || 0) + cost;
         minuteCounter -= cost * 60;
-        await setDoc(userRef, { minuteCounter }, { merge: true });
+
+        await setDoc(userRef, {
+          minuteCounter,
+          pendingEarnings: newPending
+        }, { merge: true });
+
+        alert("₱" + cost + " added to Pending Earnings!");
         updateUI();
       } else {
         alert("Not enough points yet!");
@@ -100,6 +119,8 @@
 
   <div class="section">
     <p>Total Points: <span id="points">0.00 points</span></p>
+    <p>Pending Earnings: ₱<span id="pending">0</span></p>
+    <p>Total Earnings: ₱<span id="total">0</span></p>
   </div>
 
   <div class="section">
@@ -128,6 +149,11 @@
       <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button onclick="claimReward(500)">Claim</button></div>
       <div class="card"><h3>Reward ₱1000</h3><p>Cost: 1000 points</p><button onclick="claimReward(1000)">Claim</button></div>
     </div>
+  </div>
+
+  <!-- Payment Info Link -->
+  <div class="section">
+    <button onclick="window.location.href='payout.html'">Go to Payment Info</button>
   </div>
 </body>
 </html>
