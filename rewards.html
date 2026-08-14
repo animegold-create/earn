@@ -35,10 +35,4 @@
         if (userDoc.exists()) {
           userData = userDoc.data();
           minuteCounter = userData.minuteCounter || 0;
-          document.getElementById("pending").innerText = userData.pendingEarnings || 0;
-          document.getElementById("total").innerText = userData.totalEarnings || 0;
-        } else {
-          window.location.href = "setname.html";
-        }
-      } else {
-        window.location
+          document.getElementById("pending").innerText = user
