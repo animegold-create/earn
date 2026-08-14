@@ -53,7 +53,6 @@
         updateUI();
         loadHistory();
 
-        // Only tick minutes if watching = true
         setInterval(async () => {
           if (watching) {
             minuteCounter++;
@@ -77,7 +76,7 @@
           }
         }
 
-        // Bind reward buttons
+        // Bind reward buttons (connected in Part 2)
         document.getElementById("reward100").addEventListener("click", () => claimReward(100));
         document.getElementById("reward200").addEventListener("click", () => claimReward(200));
         document.getElementById("reward500").addEventListener("click", () => claimReward(500));
@@ -92,12 +91,6 @@
           document.getElementById("points").innerText = calculatedPoints.toFixed(2) + " points";
           document.getElementById("pending").innerText = userData.pendingEarnings || 0;
           document.getElementById("total").innerText = userData.totalEarnings || 0;
-          document.getElementById("reward100").disabled = calculatedPoints < 100;
-          document.getElementById("reward200").disabled = calculatedPoints < 200;
-          document.getElementById("reward500").disabled = calculatedPoints < 500;
-          document.getElementById("reward1000").disabled = calculatedPoints < 1000;
-          document.getElementById("reward2000").disabled = calculatedPoints < 2000;
-          document.getElementById("reward5000").disabled = calculatedPoints < 5000;
         }
 
         async function loadHistory() {
@@ -148,12 +141,12 @@
   <div class="section">
     <h2>Watch Series</h2>
     <select id="seriesSelect">
-      <option value="https://trimz.tv/99-reinforced-wooden-stick">Reinforced Wooden Stick</option>
-      <option value="https://trimz.tv/the-gamer">The Gamer</option>
-      <option value="https://trimz.tv/system-analyzer">System Analyzer</option>
-      <option value="https://trimz.tv/life-exe">Life.exe</option>
-      <option value="https://trimz.tv/slam-jam">Slam Jam</option>
-      <option value="https://trimz.tv/guardians-of-rokia">Guardians of Rokia</option>
+      <option value="https://trimz.tv/99-reinforced-wooden-stick?ep=1">Reinforced Wooden Stick</option>
+      <option value="https://trimz.tv/the-gamer?ep=1">The Gamer</option>
+      <option value="https://trimz.tv/system-analyzer?ep=1">System Analyzer</option>
+      <option value="https://trimz.tv/life-exe?ep=1">Life.exe</option>
+      <option value="https://trimz.tv/slam-jam?ep=1">Slam Jam</option>
+      <option value="https://trimz.tv/guardians-of-rokia?ep=1">Guardians of Rokia</option>
     </select>
     <div style="margin-top:20px;">
       <iframe id="seriesFrame" width="640" height="360" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
@@ -172,9 +165,4 @@
       <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button id="reward500">Claim</button></div>
       <div class="card"><h3>Reward ₱1000</h3><p>Cost: 1000 points</p><button id="reward1000">Claim</button></div>
       <div class="card"><h3>Reward ₱2000</h3><p>Cost: 2000 points</p><button id="reward2000">Claim</button></div>
-      <div class="card"><h3>Reward ₱5000</h3><p>Cost: 5000 points</p><button id="reward5000">Claim</button></div>
-    </div>
-  </div>
-</body>
-</html>
-
+      <div class="card"><h3>Reward ₱5000</h3><p>Cost: 5000 points</p><button id="reward
