@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Set Your Name</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
+      authDomain: "animegold-bf2a7.firebaseapp.com",
+      projectId: "animegold-bf2a7",
+      storageBucket: "animegold-bf2a7.firebasestorage.app",
+      messagingSenderId: "1055086176557",
+      appId: "1:1055086176557:web:3e8f6fdd9778bd7169cba4",
+      measurementId: "G-QLVB68T2XM"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    async function saveName() {
+      const user = auth.currentUser;
+      const name = document.getElementById("username").value;
+      if (user && name) {
+        await setDoc(doc(db, "users", user.uid), { displayName: name }, { merge: true });
+        window.location.href = "earn.html";
+      }
+    }
+    window.saveName = saveName;
+  </script>
+</head>
+<body style="background:#111;color:#fff;text-align:center;">
+  <h1>Set Your Display Name</h1>
+  <input type="text" id="username" placeholder="Enter your name">
+  <button onclick="saveName()">Save</button>
+</body>
+</html>
