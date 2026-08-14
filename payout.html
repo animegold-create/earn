@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Payout Settings</title>
+  <title>Payout Info - AnimeGold</title>
   <style>
     body { font-family: Arial, sans-serif; background:#111; color:#fff; text-align:center; }
     .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
-    input, select, button { margin:10px; padding:8px; border-radius:5px; }
-    button { background:#ff9800; border:none; cursor:pointer; }
+    input, select { margin:10px; padding:8px; border-radius:5px; }
+    button { margin:10px; padding:10px 20px; border-radius:5px; background:#ff9800; border:none; cursor:pointer; }
   </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -19,74 +20,67 @@
       projectId: "animegold-bf2a7",
       storageBucket: "animegold-bf2a7.firebasestorage.app",
       messagingSenderId: "1055086176557",
-      appId: "1:1055086176557:web:57eace7825d9e7a069cba4",
-      measurementId: "G-0QNF3XR7XH"
+      appId: "1:1055086176557:web:aca8f68412e95ef369cba4",
+      measurementId: "G-J9LX9WMPJK"
     };
 
     const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let userRef;
+    let userRef, user, userData = {};
 
     onAuthStateChanged(auth, async (u) => {
       if (u) {
-        userRef = doc(db, "users", u.uid);
+        user = u;
+        userRef = doc(db, "users", user.uid);
         const snap = await getDoc(userRef);
-        if (snap.exists()) {
-          const data = snap.data();
-          if (data.payoutName && data.payoutMethod && data.payoutNumber) {
-            document.getElementById("payoutDisplay").innerText =
-              "Current: " + data.payoutName + " | " + data.payoutMethod + " | " + data.payoutNumber;
-          }
+        if (snap.exists()) userData = snap.data();
+        document.getElementById("greeting").innerText =
+          "Payout setup for " + (userData.displayName || u.displayName);
+        if (userData.payoutMethod) {
+          document.getElementById("method").value = userData.payoutMethod;
+          document.getElementById("number").value = userData.payoutNumber || "";
+          document.getElementById("payoutName").value = userData.payoutName || "";
         }
       } else {
         window.location.href = "index.html";
       }
     });
 
-    window.savePayoutInfo = async function() {
-      const name = document.getElementById("fullName").value.trim();
-      const method = document.getElementById("payoutMethod").value;
-      const number = document.getElementById("payoutNumber").value.trim();
+    window.savePayout = async () => {
+      const method = document.getElementById("method").value;
+      const number = document.getElementById("number").value;
+      const payoutName = document.getElementById("payoutName").value;
+      await setDoc(userRef, {
+        payoutMethod: method,
+        payoutNumber: number,
+        payoutName: payoutName
+      }, { merge: true });
+      alert("Payout info saved!");
+    };
 
-      if (!name || !method || !number) {
-        alert("Please fill in all fields.");
-        return;
-      }
-
-      try {
-        await setDoc(userRef, {
-          payoutName: name,
-          payoutMethod: method,
-          payoutNumber: number
-        }, { merge: true });
-
-        alert("Payout info saved!");
-        document.getElementById("payoutDisplay").innerText =
-          "Current: " + name + " | " + method + " | " + number;
-      } catch (err) {
-        console.error("Save failed:", err);
-        alert("Error: " + err.message);
-      }
-    }
+    window.logout = () => signOut(auth).then(() => window.location.href = "index.html");
   </script>
 </head>
 <body>
-  <h1>Payout Settings</h1>
-  <div class="section">
-    <p id="payoutDisplay" style="color:#0f0;">No payout info saved yet.</p>
+  <h1 id="greeting">Loading...</h1>
 
-    <input type="text" id="fullName" placeholder="Full Name" style="width:250px;"><br>
-    <select id="payoutMethod" style="width:250px;">
-      <option value="">Select Method</option>
+  <div class="section">
+    <h2>Set Payout Info</h2>
+    <select id="method">
       <option value="GCash">GCash</option>
       <option value="Maya">Maya</option>
     </select><br>
-    <input type="text" id="payoutNumber" placeholder="GCash or Maya Number" style="width:250px;"><br>
+    <input id="number" placeholder="Payout Number"><br>
+    <input id="payoutName" placeholder="Payout Name"><br>
+    <button onclick="savePayout()">Save</button>
+  </div>
 
-    <button onclick="savePayoutInfo()">Save Payout Info</button><br><br>
-    <button onclick="window.location.href='earn.html'">Back to Earn</button>
+  <div class="section">
+    <button onclick="window.location.href='earn.html'">Go to Earn Page</button>
+    <button onclick="logout()">Logout</button>
   </div>
 </body>
 </html>
