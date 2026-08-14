@@ -63,14 +63,21 @@
           const calculatedPoints = minuteCounter / 60;
           if (calculatedPoints >= cost) {
             alert("You claimed ₱" + cost + "! It is now pending.");
+
+            // Deduct minutes equivalent to cost
             minuteCounter -= cost * 60;
 
+            // Update Firestore: add to pending + total
             await setDoc(userRef, {
               minuteCounter,
-              pendingEarnings: (userData.pendingEarnings || 0) + cost
+              pendingEarnings: (userData.pendingEarnings || 0) + cost,
+              totalEarnings: (userData.totalEarnings || 0) + cost
             }, { merge: true });
 
+            // Update local data
             userData.pendingEarnings = (userData.pendingEarnings || 0) + cost;
+            userData.totalEarnings = (userData.totalEarnings || 0) + cost;
+
             updateUI();
             loadHistory();
           }
@@ -107,15 +114,13 @@
           });
         }
 
-        // Admin-only function to mark payment
-        window.payUser = async function(amount) {
+        // Admin-only function to mark payment (reset pending to 0)
+        window.payUser = async function() {
           await setDoc(userRef, {
-            pendingEarnings: (userData.pendingEarnings || 0) - amount,
-            totalEarnings: (userData.totalEarnings || 0) + amount
+            pendingEarnings: 0
           }, { merge: true });
 
-          userData.pendingEarnings = (userData.pendingEarnings || 0) - amount;
-          userData.totalEarnings = (userData.totalEarnings || 0) + amount;
+          userData.pendingEarnings = 0;
           updateUI();
         }
       } else {
@@ -169,4 +174,8 @@
     </select>
     <button onclick="loadSeries()">Load</button>
     <div style="margin-top:20px;">
-      <iframe id="seriesFrame" width="640" height="360" frameborder="0" allow="autoplay; fullscreen" allowfullscreen>
+      <iframe id="seriesFrame" width="640" height="360" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+    </div>
+  </div>
+</body>
+</html>
