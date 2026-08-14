@@ -73,18 +73,19 @@
               pendingEarnings: (userData.pendingEarnings || 0) + cost
             }, { merge: true });
 
-            // Update local data
             userData.pendingEarnings = (userData.pendingEarnings || 0) + cost;
-
             updateUI();
             loadHistory();
           }
         }
 
+        // Bind all reward buttons
         document.getElementById("reward100").addEventListener("click", () => claimReward(100));
         document.getElementById("reward200").addEventListener("click", () => claimReward(200));
         document.getElementById("reward500").addEventListener("click", () => claimReward(500));
         document.getElementById("reward1000").addEventListener("click", () => claimReward(1000));
+        document.getElementById("reward2000").addEventListener("click", () => claimReward(2000));
+        document.getElementById("reward5000").addEventListener("click", () => claimReward(5000));
 
         function updateUI() {
           const calculatedPoints = minuteCounter / 60;
@@ -97,6 +98,8 @@
           document.getElementById("reward200").disabled = calculatedPoints < 200;
           document.getElementById("reward500").disabled = calculatedPoints < 500;
           document.getElementById("reward1000").disabled = calculatedPoints < 1000;
+          document.getElementById("reward2000").disabled = calculatedPoints < 2000;
+          document.getElementById("reward5000").disabled = calculatedPoints < 5000;
         }
 
         async function loadHistory() {
@@ -112,7 +115,7 @@
           });
         }
 
-        // Admin-only function to mark payment (move pending → total)
+        // Admin-only function to mark payment
         window.payUser = async function(amount) {
           await setDoc(userRef, {
             pendingEarnings: (userData.pendingEarnings || 0) - amount,
@@ -144,38 +147,8 @@
     <p>Total Earnings: ₱<span id="total">0</span></p>
   </div>
 
-  <!-- Rewards -->
-  <div class="section">
-    <h2>Eligibility</h2>
-    <div class="eligibility">
-      <div class="card"><h3>Reward ₱100</h3><p>Cost: 100 points</p><button id="reward100">Claim</button></div>
-      <div class="card"><h3>Reward ₱200</h3><p>Cost: 200 points</p><button id="reward200">Claim</button></div>
-      <div class="card"><h3>Reward ₱500</h3><p>Cost: 500 points</p><button id="reward500">Claim</button></div>
-      <div class="card"><h3>Reward ₱1000</h3><p>Cost: 1000 points</p><button id="reward1000">Claim</button></div>
-    </div>
-  </div>
-
-  <!-- Claim history -->
-  <div class="section">
-    <h2>Claim History</h2>
-    <ul id="history"></ul>
-  </div>
-
-  <!-- Trimz series selector -->
+  <!-- Watch Series (default Reinforced Wooden Stick) -->
   <div class="section">
     <h2>Watch Series</h2>
     <select id="seriesSelect">
-      <option value="https://trimz.tv/99-reinforced-wooden-stick">Reinforced Wooden Stick</option>
-      <option value="https://trimz.tv/the-gamer">The Gamer</option>
-      <option value="https://trimz.tv/system-analyzer">System Analyzer</option>
-      <option value="https://trimz.tv/life-exe">Life.exe</option>
-      <option value="https://trimz.tv/slam-jam">Slam Jam</option>
-      <option value="https://trimz.tv/guardians-of-rokia">Guardians of Rokia</option>
-    </select>
-    <button onclick="loadSeries()">Load</button>
-    <div style="margin-top:20px;">
-      <iframe id="seriesFrame" width="640" height="360" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
-    </div>
-  </div>
-</body>
-</html>
+      <option value="https://trimz.tv/99-reinforced-wooden-stick">Reinforced Wooden
