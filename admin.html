@@ -1,22 +1,85 @@
-async function loadUsers() {
-  const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
-  const snap = await getDocs(q);
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AnimeGold Admin</title>
+  <script type="module">
+    // Firebase imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, orderBy, query, updateDoc, doc } 
+      from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } 
+      from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
-  const totalUsers = snap.size;
-  let html = `<h2>Total Users: ${totalUsers}</h2><ul>`;
+    // ✅ Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
+      authDomain: "animegold-bf2a7.firebaseapp.com",
+      projectId: "animegold-bf2a7",
+      storageBucket: "animegold-bf2a7.firebasestorage.app",
+      messagingSenderId: "1055086176557",
+      appId: "1:1055086176557:web:aca8f68412e95ef369cba4",
+      measurementId: "G-J9LX9WMPJK"
+    };
 
-  snap.forEach(docSnap => {
-    const data = docSnap.data();
-    const id = docSnap.id;
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth();
 
-    html += `<li>
-      ${data.email || "No email"} — Full Name: ${data.payoutName || "Not set"}
-      ${data.banned ? " 🚫 BANNED" : ""}
-      <button onclick="banUser('${id}')">Ban</button>
-      <button onclick="unbanUser('${id}')">Unban</button>
-    </li>`;
-  });
+    async function loadUsers() {
+      const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
+      const snap = await getDocs(q);
 
-  html += "</ul>";
-  document.getElementById("users").innerHTML = html;
-}
+      const totalUsers = snap.size;
+      let html = `<h2>Total Users: ${totalUsers}</h2><ul>`;
+
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        const id = docSnap.id;
+
+        html += `<li>
+          ${data.email || "No email"} — 
+          Full Name: ${data.payoutName || "Not set"} — 
+          Method: ${data.payoutMethod || "Not set"} — 
+          Number: ${data.payoutNumber || "Not set"}
+          ${data.banned ? " 🚫 BANNED" : ""}
+          <button onclick="banUser('${id}')">Ban</button>
+          <button onclick="unbanUser('${id}')">Unban</button>
+        </li>`;
+      });
+
+      html += "</ul>";
+      document.getElementById("users").innerHTML = html;
+    }
+
+    // 🚫 Ban user
+    window.banUser = async function(uid) {
+      const userDoc = doc(db, "users", uid);
+      await updateDoc(userDoc, { banned: true });
+      alert("User has been banned!");
+      loadUsers();
+    };
+
+    // ✅ Unban user
+    window.unbanUser = async function(uid) {
+      const userDoc = doc(db, "users", uid);
+      await updateDoc(userDoc, { banned: false });
+      alert("User has been unbanned!");
+      loadUsers();
+    };
+
+    // 🔒 Protect with Gmail check
+    onAuthStateChanged(auth, (user) => {
+      if (!user || user.email !== "shadowtrimz@gmail.com") {
+        window.location.href = "index.html";
+      } else {
+        document.getElementById("users").style.display = "block";
+        loadUsers();
+      }
+    });
+  </script>
+</head>
+<body style="background:#111; color:#fff; font-family:Arial; text-align:center;">
+  <h1>Admin Dashboard</h1>
+  <div id="users" style="display:none;">Loading...</div>
+</body>
+</html>
