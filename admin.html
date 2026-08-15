@@ -4,7 +4,7 @@
   <title>AnimeGold Admin</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, orderBy, query, updateDoc, doc } 
+    import { getFirestore, collection, getDocs, updateDoc, doc } 
       from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } 
       from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
@@ -24,40 +24,36 @@
     const auth = getAuth();
 
     async function loadUsers() {
-      const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
-      const snap = await getDocs(q);
+      try {
+        const snap = await getDocs(collection(db, "users"));
+        console.log("Fetched users:", snap.size);
 
-      const totalUsers = snap.size;
-      let html = `<h2>Total Registered Users: ${totalUsers}</h2><ul>`;
-
-      snap.forEach(docSnap => {
-        const data = docSnap.data();
-        const id = docSnap.id;
-
-        html += `<li>
-          UID: ${id} — 
-          Payout Name: ${data.payoutName || "Not set"}
-          ${data.banned ? " 🚫 BANNED" : ""}
-          <button onclick="banUser('${id}')">Ban</button>
-          <button onclick="unbanUser('${id}')">Unban</button>
-        </li>`;
-      });
-
-      html += "</ul>";
-      document.getElementById("users").innerHTML = html;
+        let html = `<h2>Total Registered Users: ${snap.size}</h2><ul>`;
+        snap.forEach(docSnap => {
+          const data = docSnap.data();
+          html += `<li>
+            UID: ${docSnap.id} — 
+            Payout Name: ${data.payoutName || "Not set"}
+            ${data.banned ? " 🚫 BANNED" : ""}
+            <button onclick="banUser('${docSnap.id}')">Ban</button>
+            <button onclick="unbanUser('${docSnap.id}')">Unban</button>
+          </li>`;
+        });
+        html += "</ul>";
+        document.getElementById("users").innerHTML = html;
+      } catch (err) {
+        console.error("Error loading users:", err);
+        document.getElementById("users").innerHTML = "Error connecting to Firebase!";
+      }
     }
 
     window.banUser = async function(uid) {
-      const userDoc = doc(db, "users", uid);
-      await updateDoc(userDoc, { banned: true });
-      alert("User has been banned!");
+      await updateDoc(doc(db, "users", uid), { banned: true });
       loadUsers();
     };
 
     window.unbanUser = async function(uid) {
-      const userDoc = doc(db, "users", uid);
-      await updateDoc(userDoc, { banned: false });
-      alert("User has been unbanned!");
+      await updateDoc(doc(db, "users", uid), { banned: false });
       loadUsers();
     };
 
