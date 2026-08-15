@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AnimeGold Admin</title>
+  <script type="module">
+    // Firebase imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, orderBy, query } 
+      from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } 
+      from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    // ✅ Your Firebase config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth();
+
+    async function loadUsers() {
+      const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
+      const snap = await getDocs(q);
+
+      // Count users
+      const totalUsers = snap.size;
+      let html = `<h2>Total Users: ${totalUsers}</h2><ul>`;
+
+      // List users
+      snap.forEach(doc => {
+        const data = doc.data();
+        html += `<li>${data.email || "No email"} — joined ${data.createdAt}</li>`;
+      });
+      html += "</ul>";
+
+      document.getElementById("users").innerHTML = html;
+    }
+
+    // 🔒 Protect with Gmail check
+    onAuthStateChanged(auth, (user) => {
+      if (!user || user.email !== "shadowtrimz@gmail.com") {
+        // 🚫 Not your Gmail → redirect away
+        window.location.href = "index.html";
+      } else {
+        // ✅ Your Gmail → show admin dashboard
+        document.getElementById("users").style.display = "block";
+        loadUsers();
+      }
+    });
+  </script>
+</head>
+<body>
+  <h1>Admin Dashboard</h1>
+  <div id="users" style="display:none;">Loading...</div>
+</body>
+</html>
