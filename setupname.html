@@ -49,14 +49,20 @@
           // ❌ No name yet → show input + button
           document.getElementById("confirmBtn").style.display = "inline-block";
           document.getElementById("confirmBtn").onclick = async () => {
-            const name = document.getElementById("userName").value;
+            const name = document.getElementById("userName").value.trim();
             if (!name) {
               alert("Please enter a name!");
               return;
             }
             try {
-              await setDoc(userRef, { userName: name }, { merge: true });
-              alert("Name saved!");
+              // ✅ Save both name + Gmail email
+              await setDoc(userRef, { 
+                userName: name,
+                email: u.email,                // auto‑save Gmail
+                createdAt: new Date().toISOString()
+              }, { merge: true });
+
+              alert("Name and email saved!");
               window.location.href = "earn.html";
             } catch (e) {
               alert("Error: " + e.message);
