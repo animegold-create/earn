@@ -5,7 +5,7 @@
   <script type="module">
     // Firebase imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, orderBy, query } 
+    import { getFirestore, collection, getDocs, orderBy, query, updateDoc, doc } 
       from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } 
       from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -25,27 +25,46 @@
       const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
       const snap = await getDocs(q);
 
-      // Count users
       const totalUsers = snap.size;
       let html = `<h2>Total Users: ${totalUsers}</h2><ul>`;
 
-      // List users
-      snap.forEach(doc => {
-        const data = doc.data();
-        html += `<li>${data.email || "No email"} — joined ${data.createdAt}</li>`;
-      });
-      html += "</ul>";
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        const id = docSnap.id;
 
+        html += `<li>
+          ${data.email || "No email"} — joined ${data.createdAt}
+          ${data.banned ? " 🚫 BANNED" : ""}
+          <button onclick="banUser('${id}')">Ban</button>
+          <button onclick="unbanUser('${id}')">Unban</button>
+        </li>`;
+      });
+
+      html += "</ul>";
       document.getElementById("users").innerHTML = html;
     }
+
+    // 🚫 Ban user
+    window.banUser = async function(uid) {
+      const userDoc = doc(db, "users", uid);
+      await updateDoc(userDoc, { banned: true });
+      alert("User has been banned!");
+      loadUsers();
+    };
+
+    // ✅ Unban user
+    window.unbanUser = async function(uid) {
+      const userDoc = doc(db, "users", uid);
+      await updateDoc(userDoc, { banned: false });
+      alert("User has been unbanned!");
+      loadUsers();
+    };
 
     // 🔒 Protect with Gmail check
     onAuthStateChanged(auth, (user) => {
       if (!user || user.email !== "shadowtrimz@gmail.com") {
-        // 🚫 Not your Gmail → redirect away
         window.location.href = "index.html";
       } else {
-        // ✅ Your Gmail → show admin dashboard
         document.getElementById("users").style.display = "block";
         loadUsers();
       }
