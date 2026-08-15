@@ -30,17 +30,16 @@
       const snap = await getDocs(q);
 
       const totalUsers = snap.size;
-      let html = `<h2>Total Users: ${totalUsers}</h2><ul>`;
+      let html = `<h2>Total Registered Users: ${totalUsers}</h2><ul>`;
 
       snap.forEach(docSnap => {
         const data = docSnap.data();
         const id = docSnap.id;
 
         html += `<li>
-          ${data.email || "No email"} — 
-          Full Name: ${data.payoutName || "Not set"} — 
-          Method: ${data.payoutMethod || "Not set"} — 
-          Number: ${data.payoutNumber || "Not set"}
+          UID: ${id} — 
+          Email: ${data.email || "Not saved"} — 
+          Name: ${data.userName || "Not set"}
           ${data.banned ? " 🚫 BANNED" : ""}
           <button onclick="banUser('${id}')">Ban</button>
           <button onclick="unbanUser('${id}')">Unban</button>
