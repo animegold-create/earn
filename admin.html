@@ -4,17 +4,21 @@
   <title>AnimeGold Admin</title>
   <script type="module">
     // Firebase imports
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
     import { getFirestore, collection, getDocs, orderBy, query, updateDoc, doc } 
-      from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } 
-      from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+      from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
     // ✅ Your Firebase config
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
+      apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
+      authDomain: "animegold-bf2a7.firebaseapp.com",
+      projectId: "animegold-bf2a7",
+      storageBucket: "animegold-bf2a7.firebasestorage.app",
+      messagingSenderId: "1055086176557",
+      appId: "1:1055086176557:web:aca8f68412e95ef369cba4",
+      measurementId: "G-J9LX9WMPJK"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -71,7 +75,7 @@
     });
   </script>
 </head>
-<body>
+<body style="background:#111; color:#fff; font-family:Arial; text-align:center;">
   <h1>Admin Dashboard</h1>
   <div id="users" style="display:none;">Loading...</div>
 </body>
