@@ -3,14 +3,12 @@
 <head>
   <title>AnimeGold Admin</title>
   <script type="module">
-    // Firebase imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
     import { getFirestore, collection, getDocs, orderBy, query, updateDoc, doc } 
       from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } 
       from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
-    // ✅ Your Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
       authDomain: "animegold-bf2a7.firebaseapp.com",
@@ -38,8 +36,7 @@
 
         html += `<li>
           UID: ${id} — 
-          Email: ${data.email || "Not saved"} — 
-          Name: ${data.userName || "Not set"}
+          Payout Name: ${data.payoutName || "Not set"}
           ${data.banned ? " 🚫 BANNED" : ""}
           <button onclick="banUser('${id}')">Ban</button>
           <button onclick="unbanUser('${id}')">Unban</button>
@@ -50,7 +47,6 @@
       document.getElementById("users").innerHTML = html;
     }
 
-    // 🚫 Ban user
     window.banUser = async function(uid) {
       const userDoc = doc(db, "users", uid);
       await updateDoc(userDoc, { banned: true });
@@ -58,7 +54,6 @@
       loadUsers();
     };
 
-    // ✅ Unban user
     window.unbanUser = async function(uid) {
       const userDoc = doc(db, "users", uid);
       await updateDoc(userDoc, { banned: false });
@@ -66,7 +61,6 @@
       loadUsers();
     };
 
-    // 🔒 Protect with Gmail check
     onAuthStateChanged(auth, (user) => {
       if (!user || user.email !== "shadowtrimz@gmail.com") {
         window.location.href = "index.html";
