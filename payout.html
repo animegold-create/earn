@@ -7,6 +7,7 @@
     .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
     input, select { margin:10px; padding:8px; border-radius:5px; }
     button { margin:10px; padding:10px 20px; background:#ff9800; border:none; border-radius:5px; cursor:pointer; }
+    .admin-btn { padding:10px 20px; background:#c0392b; color:white; font-weight:bold; border-radius:5px; text-decoration:none; }
   </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
@@ -41,6 +42,17 @@
             document.getElementById("number").value = userData.payoutNumber || "";
             document.getElementById("payoutName").value = userData.payoutName || "";
           }
+        }
+        // ✅ Show Admin button only for your Gmail
+        if (u.email === "shadowtrimz@gmail.com") {
+          const adminLink = document.getElementById("adminLink");
+          adminLink.style.display = "inline-block";
+          adminLink.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (confirm("Are you sure you want to enter the Admin Dashboard?")) {
+              window.location.href = "admin.html";
+            }
+          });
         }
       } else {
         window.location.href = "index.html";
@@ -90,6 +102,10 @@
   </div>
   <div class="section">
     <button onclick="logout()">Logout</button>
+  </div>
+  <!-- 🚀 Admin button -->
+  <div class="section">
+    <a id="adminLink" href="admin.html" class="admin-btn" style="display:none;">🚀 Admin Dashboard</a>
   </div>
 </body>
 </html>
