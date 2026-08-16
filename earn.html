@@ -10,6 +10,9 @@
     .card h3 { margin:0 0 10px; font-size:16px; }
     .card button { background:#ff9800; border:none; padding:8px 12px; border-radius:5px; cursor:pointer; }
     .banned-message { background:#c0392b; padding:20px; border-radius:10px; margin:20px; }
+    .status-badge { display:inline-block; padding:5px 10px; border-radius:5px; font-weight:bold; margin:10px 0; }
+    .status-active { background:#27ae60; }
+    .status-inactive { background:#95a5a6; }
   </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
@@ -30,7 +33,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let userRef, userData = {}, minuteCounter = 0, watching = false;
+    let userRef, userData = {}, minuteCounter = 0, watching = false, updateInterval;
 
     onAuthStateChanged(auth, async (u) => {
       if (u) {
@@ -61,24 +64,48 @@
       }
     });
 
-    window.loadSeries = () => {
+    window.loadSeries = async () => {
       document.getElementById("seriesFrame").src =
         document.getElementById("seriesSelect").value;
       watching = true;
-      // start counting minutes after clicking Load
-      setInterval(async () => {
+
+      // Set user status to ACTIVE
+      await setDoc(userRef, { activityStatus: "active", lastActivityTime: new Date().toISOString() }, { merge: true });
+
+      // Update status badge
+      document.getElementById("statusBadge").textContent = "🟢 ACTIVE";
+      document.getElementById("statusBadge").className = "status-badge status-active";
+
+      // Start counting minutes after clicking Load
+      if (updateInterval) clearInterval(updateInterval);
+      updateInterval = setInterval(async () => {
         if (watching) {
           minuteCounter++;
-          await setDoc(userRef, { minuteCounter }, { merge: true });
+          await setDoc(userRef, { minuteCounter, lastActivityTime: new Date().toISOString() }, { merge: true });
           updateUI();
         }
       }, 60000);
     };
 
+    window.stopWatching = async () => {
+      watching = false;
+      if (updateInterval) clearInterval(updateInterval);
+
+      // Set user status to INACTIVE
+      await setDoc(userRef, { activityStatus: "inactive" }, { merge: true });
+
+      // Update status badge
+      document.getElementById("statusBadge").textContent = "⚫ INACTIVE";
+      document.getElementById("statusBadge").className = "status-badge status-inactive";
+
+      document.getElementById("seriesFrame").src = "";
+      alert("Stopped watching. Status set to Inactive.");
+    };
+
     async function updateUI() {
       const snap = await getDoc(userRef);
       if (snap.exists()) userData = snap.data();
-      // ✅ Show increments every minute (1 point = 300 minutes)
+      
       const pointsEarned = (minuteCounter / 300).toFixed(4);
       document.getElementById("points").innerText =
         pointsEarned + " points";
@@ -86,10 +113,20 @@
         userData.pendingEarnings || 0;
       document.getElementById("total").innerText =
         userData.totalEarnings || 0;
+
+      // Update status badge
+      const status = userData.activityStatus || "inactive";
+      if (status === "active") {
+        document.getElementById("statusBadge").textContent = "🟢 ACTIVE";
+        document.getElementById("statusBadge").className = "status-badge status-active";
+      } else {
+        document.getElementById("statusBadge").textContent = "⚫ INACTIVE";
+        document.getElementById("statusBadge").className = "status-badge status-inactive";
+      }
     }
 
     window.claimReward = async (cost) => {
-      const pts = minuteCounter / 300; // matches slower earning
+      const pts = minuteCounter / 300;
       const snap = await getDoc(userRef);
       let data = {};
       if (snap.exists()) data = snap.data();
@@ -101,7 +138,7 @@
 
       if (pts >= cost) {
         const newPending = (data.pendingEarnings || 0) + cost;
-        minuteCounter -= cost * 300; // deduct minutes equivalent
+        minuteCounter -= cost * 300;
         await setDoc(userRef, { minuteCounter, pendingEarnings: newPending }, { merge: true });
         alert("₱" + cost + " added to Pending Earnings for " +
               data.userName + " via " + data.payoutMethod + "!");
@@ -111,12 +148,19 @@
       }
     };
 
-    window.logout = () => signOut(auth).then(() => window.location.href = "index.html");
+    window.logout = () => signOut(auth).then(async () => {
+      // Set status to inactive before logout
+      if (userRef) {
+        await setDoc(userRef, { activityStatus: "inactive" }, { merge: true });
+      }
+      window.location.href = "index.html";
+    });
   </script>
 </head>
 <body>
   <h1 id="greeting">Loading...</h1>
   <div class="section">
+    <div id="statusBadge" class="status-badge status-inactive">⚫ INACTIVE</div>
     <p>Total Points: <span id="points">0.0000 points</span></p>
     <p>Pending Earnings: ₱<span id="pending">0</span></p>
     <p>Total Earnings: ₱<span id="total">0</span></p>
@@ -135,6 +179,7 @@
       <iframe id="seriesFrame" width="640" height="360" frameborder="0" allowfullscreen></iframe>
     </div>
     <button onclick="loadSeries()">Load</button>
+    <button onclick="stopWatching()" style="background:#e74c3c;">Stop Watching</button>
   </div>
   <div class="section">
     <h2>Rewards</h2>
