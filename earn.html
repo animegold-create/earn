@@ -50,17 +50,17 @@
     let userRef, userData = {}, minuteCounter = 0, watching = false, updateInterval;
     let isSpinning = false;
 
-    // Wheel configuration
+    // Wheel configuration - prizes in points (1 point = 1 peso)
     const wheelPrizes = [
-      { value: 0.20, chance: 54.9869, color: '#e74c3c' },
-      { value: 0.50, chance: 34.9131, color: '#3498db' },
-      { value: 0.80, chance: 5, color: '#2ecc71' },
-      { value: 1, chance: 0.004, color: '#f39c12' },
-      { value: 5, chance: 0.008, color: '#9b59b6' },
-      { value: 10, chance: 0.0015, color: '#1abc9c' },
-      { value: 25, chance: 0.0004, color: '#34495e' },
-      { value: 50, chance: 0.0002, color: '#c0392b' },
-      { value: 100, chance: 0.0000001, color: '#f1c40f' }
+      { points: 0.20, chance: 54.9869, color: '#e74c3c' },
+      { points: 0.50, chance: 34.9131, color: '#3498db' },
+      { points: 0.80, chance: 5, color: '#2ecc71' },
+      { points: 1, chance: 0.004, color: '#f39c12' },
+      { points: 5, chance: 0.008, color: '#9b59b6' },
+      { points: 10, chance: 0.0015, color: '#1abc9c' },
+      { points: 25, chance: 0.0004, color: '#34495e' },
+      { points: 50, chance: 0.0002, color: '#c0392b' },
+      { points: 100, chance: 0.0000001, color: '#f1c40f' }
     ];
 
     function createWheel() {
@@ -73,7 +73,7 @@
         segment.className = 'wheel-segment';
         segment.style.background = prize.color;
         segment.style.transform = `rotate(${segmentAngle * index}deg)`;
-        segment.textContent = '₱' + prize.value;
+        segment.textContent = prize.points + 'pts';
         wheelDiv.appendChild(segment);
       });
     }
@@ -109,8 +109,8 @@
       document.getElementById('spinBtn').disabled = true;
 
       try {
-        // Deduct 1 point
-        minuteCounter -= 300; // 1 point = 300 minutes
+        // Deduct 1 point (300 minutes)
+        minuteCounter -= 300;
         await setDoc(userRef, { minuteCounter }, { merge: true });
 
         // Spin animation
@@ -129,15 +129,15 @@
         const winningIndex = Math.floor((360 - (extraDegrees % 360)) / (360 / wheelPrizes.length)) % wheelPrizes.length;
         const prize = wheelPrizes[winningIndex];
 
-        // Add winnings to pending earnings
-        const snap = await getDoc(userRef);
-        const data = snap.exists() ? snap.data() : {};
-        const newPending = (data.pendingEarnings || 0) + prize.value;
+        // Add winnings directly to minuteCounter as points
+        // Convert points to minutes: points * 300 = minutes
+        const pointsToAdd = prize.points * 300;
+        minuteCounter += pointsToAdd;
 
-        await setDoc(userRef, { pendingEarnings: newPending }, { merge: true });
+        await setDoc(userRef, { minuteCounter }, { merge: true });
 
         // Show result
-        document.getElementById('resultText').innerText = `🎉 You Won: ₱${prize.value}!`;
+        document.getElementById('resultText').innerText = `🎉 You Won: ${prize.points} points!`;
         document.getElementById('resultModal').style.display = 'flex';
 
         updateUI();
