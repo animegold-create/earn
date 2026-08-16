@@ -7,8 +7,11 @@
     .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
     button { margin:5px; padding:8px 12px; background:#ff9800; border:none; border-radius:5px; cursor:pointer; }
     button.ban-btn { background:#c0392b; }
+    button.points-btn { background:#27ae60; }
     ul { list-style:none; padding:0; }
     li { background:#333; margin:10px 0; padding:15px; border-radius:5px; text-align:left; }
+    input[type="number"] { padding:5px; border-radius:5px; width:80px; }
+    .user-controls { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   </style>
   <script type="module">
     // ✅ Use consistent Firebase v12.17.1 across all pages
@@ -51,8 +54,12 @@
             <strong>Pending Earnings:</strong> ₱${data.pendingEarnings || 0}<br>
             <strong>Total Earnings:</strong> ₱${data.totalEarnings || 0}<br>
             <strong>Status:</strong> ${data.banned ? "🚫 BANNED" : "✅ Active"}<br>
-            <button class="ban-btn" onclick="banUser('${docSnap.id}')">Ban</button>
-            <button onclick="unbanUser('${docSnap.id}')">Unban</button>
+            <div class="user-controls">
+              <input type="number" id="points-${docSnap.id}" placeholder="Points" min="0" value="0">
+              <button class="points-btn" onclick="addPoints('${docSnap.id}')">Add Points</button>
+              <button class="ban-btn" onclick="banUser('${docSnap.id}')">Ban</button>
+              <button onclick="unbanUser('${docSnap.id}')">Unban</button>
+            </div>
           </li>`;
         });
         html += "</ul>";
@@ -62,6 +69,35 @@
         document.getElementById("users").innerHTML = `<p style="color:red;">Error connecting to Firebase: ${err.message}</p>`;
       }
     }
+
+    window.addPoints = async function(uid) {
+      const pointsInput = document.getElementById(`points-${uid}`);
+      const points = parseInt(pointsInput.value);
+      
+      if (isNaN(points) || points <= 0) {
+        alert("Please enter a valid number of points!");
+        return;
+      }
+
+      try {
+        const userRef = doc(db, "users", uid);
+        const snap = await getDoc(userRef);
+        const userData = snap.exists() ? snap.data() : {};
+        
+        // Convert points to minutes (1 point = 300 minutes)
+        const minutesToAdd = points * 300;
+        const currentMinutes = userData.minuteCounter || 0;
+        
+        await updateDoc(userRef, { 
+          minuteCounter: currentMinutes + minutesToAdd
+        });
+        alert(`✅ Added ${points} points (${minutesToAdd} minutes) to user!`);
+        pointsInput.value = "0";
+        loadUsers();
+      } catch (err) {
+        alert("Error adding points: " + err.message);
+      }
+    };
 
     window.banUser = async function(uid) {
       try {
@@ -84,6 +120,10 @@
     };
 
     window.logout = () => signOut(auth).then(() => window.location.href = "index.html");
+
+    // Import getDoc for addPoints function
+    import { getDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+    window.getDoc = getDoc;
 
     onAuthStateChanged(auth, (user) => {
       // 🔒 Restrict to admin email
