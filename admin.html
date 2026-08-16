@@ -13,6 +13,8 @@
     input[type="number"] { padding:5px; border-radius:5px; width:80px; }
     .user-controls { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .earnings-row { display:flex; gap:10px; align-items:center; margin:5px 0; }
+    .device-info { background:#222; padding:10px; border-radius:5px; margin:8px 0; font-size:12px; }
+    .device-info strong { color:#ff9800; }
   </style>
   <script type="module">
     // ✅ Use consistent Firebase v12.17.1 across all pages
@@ -46,12 +48,28 @@
         snap.forEach(docSnap => {
           const data = docSnap.data();
           const pointsEarned = ((data.minuteCounter || 0) / 300).toFixed(4);
+          
+          // Format device and IP info
+          let deviceHTML = "";
+          if (data.lastIP || data.lastDevice) {
+            deviceHTML = `
+              <div class="device-info">
+                <strong>Last Login:</strong> ${data.lastLogin || "N/A"}<br>
+                <strong>IP Address:</strong> ${data.lastIP || "N/A"}<br>
+                <strong>Browser:</strong> ${data.lastDevice?.browser || "N/A"}<br>
+                <strong>OS:</strong> ${data.lastDevice?.os || "N/A"}<br>
+                <strong>Device Type:</strong> ${data.lastDevice?.deviceType || "N/A"}
+              </div>
+            `;
+          }
+
           html += `<li>
             <strong>UID:</strong> ${docSnap.id}<br>
             <strong>Name:</strong> ${data.userName || "Not set"}<br>
             <strong>Email:</strong> ${data.email || "Not set"}<br>
             <strong>Payout Method:</strong> ${data.payoutMethod || "Not set"}<br>
             <strong>Payout Name:</strong> ${data.payoutName || "Not set"}<br>
+            ${deviceHTML}
             <div class="earnings-row">
               <strong>Points Earned:</strong> <input type="number" id="points-${docSnap.id}" value="${pointsEarned}" min="0" step="0.0001">
               <button class="edit-btn" onclick="editPoints('${docSnap.id}')">Edit</button>
