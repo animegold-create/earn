@@ -7,7 +7,6 @@
     .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
     button { margin:5px; padding:8px 12px; background:#ff9800; border:none; border-radius:5px; cursor:pointer; }
     button.ban-btn { background:#c0392b; }
-    button.points-btn { background:#27ae60; }
     button.edit-btn { background:#3498db; padding:6px 10px; font-size:12px; }
     ul { list-style:none; padding:0; }
     li { background:#333; margin:10px 0; padding:15px; border-radius:5px; text-align:left; }
@@ -46,13 +45,17 @@
         let html = `<h2>Total Registered Users: ${snap.size}</h2><ul>`;
         snap.forEach(docSnap => {
           const data = docSnap.data();
+          const pointsEarned = ((data.minuteCounter || 0) / 300).toFixed(4);
           html += `<li>
             <strong>UID:</strong> ${docSnap.id}<br>
             <strong>Name:</strong> ${data.userName || "Not set"}<br>
             <strong>Email:</strong> ${data.email || "Not set"}<br>
             <strong>Payout Method:</strong> ${data.payoutMethod || "Not set"}<br>
             <strong>Payout Name:</strong> ${data.payoutName || "Not set"}<br>
-            <strong>Points Earned:</strong> ${((data.minuteCounter || 0) / 300).toFixed(4)}<br>
+            <div class="earnings-row">
+              <strong>Points Earned:</strong> <input type="number" id="points-${docSnap.id}" value="${pointsEarned}" min="0" step="0.0001">
+              <button class="edit-btn" onclick="editPoints('${docSnap.id}')">Edit</button>
+            </div>
             <div class="earnings-row">
               <strong>Pending Earnings:</strong> ₱<input type="number" id="pending-${docSnap.id}" value="${data.pendingEarnings || 0}" min="0">
               <button class="edit-btn" onclick="editPendingEarnings('${docSnap.id}')">Edit</button>
@@ -63,8 +66,6 @@
             </div>
             <strong>Status:</strong> ${data.banned ? "🚫 BANNED" : "✅ Active"}<br>
             <div class="user-controls">
-              <input type="number" id="points-${docSnap.id}" placeholder="Points" min="0" value="0">
-              <button class="points-btn" onclick="addPoints('${docSnap.id}')">Add Points</button>
               <button class="ban-btn" onclick="banUser('${docSnap.id}')">Ban</button>
               <button onclick="unbanUser('${docSnap.id}')">Unban</button>
             </div>
@@ -77,6 +78,25 @@
         document.getElementById("users").innerHTML = `<p style="color:red;">Error connecting to Firebase: ${err.message}</p>`;
       }
     }
+
+    window.editPoints = async function(uid) {
+      const points = parseFloat(document.getElementById(`points-${uid}`).value);
+      
+      if (isNaN(points) || points < 0) {
+        alert("Please enter a valid amount!");
+        return;
+      }
+
+      try {
+        // Convert points back to minutes (1 point = 300 minutes)
+        const minutes = points * 300;
+        await updateDoc(doc(db, "users", uid), { minuteCounter: minutes });
+        alert(`✅ Points updated to ${points}!`);
+        loadUsers();
+      } catch (err) {
+        alert("Error updating points: " + err.message);
+      }
+    };
 
     window.editPendingEarnings = async function(uid) {
       const value = parseInt(document.getElementById(`pending-${uid}`).value);
@@ -109,35 +129,6 @@
         loadUsers();
       } catch (err) {
         alert("Error updating total earnings: " + err.message);
-      }
-    };
-
-    window.addPoints = async function(uid) {
-      const pointsInput = document.getElementById(`points-${uid}`);
-      const points = parseInt(pointsInput.value);
-      
-      if (isNaN(points) || points <= 0) {
-        alert("Please enter a valid number of points!");
-        return;
-      }
-
-      try {
-        const userRef = doc(db, "users", uid);
-        const snap = await getDoc(userRef);
-        const userData = snap.exists() ? snap.data() : {};
-        
-        // Convert points to minutes (1 point = 300 minutes)
-        const minutesToAdd = points * 300;
-        const currentMinutes = userData.minuteCounter || 0;
-        
-        await updateDoc(userRef, { 
-          minuteCounter: currentMinutes + minutesToAdd
-        });
-        alert(`✅ Added ${points} points (${minutesToAdd} minutes) to user!`);
-        pointsInput.value = "0";
-        loadUsers();
-      } catch (err) {
-        alert("Error adding points: " + err.message);
       }
     };
 
