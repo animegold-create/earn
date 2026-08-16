@@ -15,6 +15,10 @@
     .earnings-row { display:flex; gap:10px; align-items:center; margin:5px 0; }
     .device-info { background:#222; padding:10px; border-radius:5px; margin:8px 0; font-size:12px; }
     .device-info strong { color:#ff9800; }
+    .status-badge { display:inline-block; padding:8px 12px; border-radius:5px; font-weight:bold; margin:5px 0; font-size:14px; }
+    .status-active { background:#27ae60; }
+    .status-inactive { background:#95a5a6; }
+    .status-banned { background:#c0392b; }
   </style>
   <script type="module">
     // ✅ Use consistent Firebase v12.17.1 across all pages
@@ -49,6 +53,19 @@
           const data = docSnap.data();
           const pointsEarned = ((data.minuteCounter || 0) / 300).toFixed(4);
           
+          // Determine status and badge color
+          let statusBadge = "";
+          if (data.banned === true) {
+            statusBadge = '<div class="status-badge status-banned">🚫 BANNED</div>';
+          } else {
+            const activityStatus = data.activityStatus || "inactive";
+            if (activityStatus === "active") {
+              statusBadge = '<div class="status-badge status-active">🟢 ACTIVE</div>';
+            } else {
+              statusBadge = '<div class="status-badge status-inactive">⚫ INACTIVE</div>';
+            }
+          }
+          
           // Format device and IP info
           let deviceHTML = "";
           if (data.lastIP || data.lastDevice) {
@@ -69,6 +86,7 @@
             <strong>Email:</strong> ${data.email || "Not set"}<br>
             <strong>Payout Method:</strong> ${data.payoutMethod || "Not set"}<br>
             <strong>Payout Name:</strong> ${data.payoutName || "Not set"}<br>
+            ${statusBadge}
             ${deviceHTML}
             <div class="earnings-row">
               <strong>Points Earned:</strong> <input type="number" id="points-${docSnap.id}" value="${pointsEarned}" min="0" step="0.0001">
@@ -82,7 +100,6 @@
               <strong>Total Earnings:</strong> ₱<input type="number" id="total-${docSnap.id}" value="${data.totalEarnings || 0}" min="0">
               <button class="edit-btn" onclick="editTotalEarnings('${docSnap.id}')">Edit</button>
             </div>
-            <strong>Status:</strong> ${data.banned ? "🚫 BANNED" : "✅ Active"}<br>
             <div class="user-controls">
               <button class="ban-btn" onclick="banUser('${docSnap.id}')">Ban</button>
               <button onclick="unbanUser('${docSnap.id}')">Unban</button>
