@@ -13,6 +13,20 @@
     .status-badge { display:inline-block; padding:5px 10px; border-radius:5px; font-weight:bold; margin:10px 0; }
     .status-active { background:#27ae60; }
     .status-inactive { background:#95a5a6; }
+    
+    /* Spin the Wheel Styles */
+    .wheel-container { position:relative; width:300px; height:300px; margin:20px auto; }
+    .wheel { width:100%; height:100%; border-radius:50%; position:relative; overflow:hidden; box-shadow:0 0 20px rgba(255, 152, 0, 0.5); }
+    .wheel-segment { position:absolute; width:100%; height:100%; clip-path:polygon(50% 50%, 50% 0%, 100% 0%); transform-origin:50% 50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; color:#fff; }
+    .pointer { position:absolute; top:-15px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-top:20px solid #ff9800; z-index:10; }
+    .spin-button { background:#27ae60; border:none; padding:12px 30px; border-radius:5px; cursor:pointer; font-size:16px; font-weight:bold; color:#fff; margin:10px; }
+    .spin-button:disabled { background:#95a5a6; cursor:not-allowed; }
+    .spin-result { background:#333; padding:15px; border-radius:8px; margin:20px auto; width:fit-content; font-size:18px; font-weight:bold; }
+    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:999; }
+    .modal-content { background:#333; padding:30px; border-radius:10px; text-align:center; width:300px; }
+    .modal-content h2 { margin-top:0; }
+    .modal-content button { margin:10px 5px; padding:10px 20px; background:#ff9800; border:none; border-radius:5px; cursor:pointer; }
+    .modal-content button.close { background:#e74c3c; }
   </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
@@ -34,6 +48,110 @@
     const db = getFirestore(app);
 
     let userRef, userData = {}, minuteCounter = 0, watching = false, updateInterval;
+    let isSpinning = false;
+
+    // Wheel configuration
+    const wheelPrizes = [
+      { value: 0.20, chance: 54.9869, color: '#e74c3c' },
+      { value: 0.50, chance: 34.9131, color: '#3498db' },
+      { value: 0.80, chance: 5, color: '#2ecc71' },
+      { value: 1, chance: 0.004, color: '#f39c12' },
+      { value: 5, chance: 0.008, color: '#9b59b6' },
+      { value: 10, chance: 0.0015, color: '#1abc9c' },
+      { value: 25, chance: 0.0004, color: '#34495e' },
+      { value: 50, chance: 0.0002, color: '#c0392b' },
+      { value: 100, chance: 0.0000001, color: '#f1c40f' }
+    ];
+
+    function createWheel() {
+      const wheelDiv = document.getElementById('wheel');
+      wheelDiv.innerHTML = '';
+      
+      const segmentAngle = 360 / wheelPrizes.length;
+      wheelPrizes.forEach((prize, index) => {
+        const segment = document.createElement('div');
+        segment.className = 'wheel-segment';
+        segment.style.background = prize.color;
+        segment.style.transform = `rotate(${segmentAngle * index}deg)`;
+        segment.textContent = '₱' + prize.value;
+        wheelDiv.appendChild(segment);
+      });
+    }
+
+    function getRandomPrize() {
+      const random = Math.random() * 100;
+      let cumulative = 0;
+      
+      for (let prize of wheelPrizes) {
+        cumulative += prize.chance;
+        if (random <= cumulative) {
+          return prize;
+        }
+      }
+      
+      return wheelPrizes[0];
+    }
+
+    window.spinWheel = async () => {
+      const pts = minuteCounter / 300;
+      
+      if (pts < 1) {
+        alert("You need at least 1 point to spin!");
+        return;
+      }
+
+      if (isSpinning) {
+        alert("Already spinning...");
+        return;
+      }
+
+      isSpinning = true;
+      document.getElementById('spinBtn').disabled = true;
+
+      try {
+        // Deduct 1 point
+        minuteCounter -= 300; // 1 point = 300 minutes
+        await setDoc(userRef, { minuteCounter }, { merge: true });
+
+        // Spin animation
+        const wheel = document.getElementById('wheel');
+        const spins = 10;
+        const extraDegrees = Math.floor(Math.random() * 360);
+        const totalRotation = spins * 360 + extraDegrees;
+
+        wheel.style.transition = 'transform 3s ease-out';
+        wheel.style.transform = `rotate(${totalRotation}deg)`;
+
+        // Wait for spin to complete
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // Calculate which prize won
+        const winningIndex = Math.floor((360 - (extraDegrees % 360)) / (360 / wheelPrizes.length)) % wheelPrizes.length;
+        const prize = wheelPrizes[winningIndex];
+
+        // Add winnings to pending earnings
+        const snap = await getDoc(userRef);
+        const data = snap.exists() ? snap.data() : {};
+        const newPending = (data.pendingEarnings || 0) + prize.value;
+
+        await setDoc(userRef, { pendingEarnings: newPending }, { merge: true });
+
+        // Show result
+        document.getElementById('resultText').innerText = `🎉 You Won: ₱${prize.value}!`;
+        document.getElementById('resultModal').style.display = 'flex';
+
+        updateUI();
+      } catch (err) {
+        alert("Error during spin: " + err.message);
+      } finally {
+        isSpinning = false;
+        document.getElementById('spinBtn').disabled = false;
+      }
+    };
+
+    window.closeResultModal = () => {
+      document.getElementById('resultModal').style.display = 'none';
+    };
 
     onAuthStateChanged(auth, async (u) => {
       if (u) {
@@ -58,6 +176,7 @@
           "Hello, " + (userData.userName || "User") + "!";
 
         minuteCounter = userData.minuteCounter || 0;
+        createWheel();
         updateUI();
       } else {
         window.location.href = "index.html";
@@ -182,6 +301,15 @@
     <button onclick="stopWatching()" style="background:#e74c3c;">Stop Watching</button>
   </div>
   <div class="section">
+    <h2>Spin the Wheel</h2>
+    <p style="font-size:14px; color:#ff9800;">Cost: 1 point per spin</p>
+    <div class="wheel-container">
+      <div class="pointer"></div>
+      <div class="wheel" id="wheel"></div>
+    </div>
+    <button class="spin-button" id="spinBtn" onclick="spinWheel()">🎡 SPIN</button>
+  </div>
+  <div class="section">
     <h2>Rewards</h2>
     <div class="eligibility">
       <div class="card"><h3>Reward ₱100</h3><p>Cost: 100 points</p><button onclick="claimReward(100)">Claim</button></div>
@@ -193,6 +321,15 @@
   <div class="section">
     <button onclick="window.location.href='payout.html'">Update Payout Info</button>
     <button onclick="logout()">Logout</button>
+  </div>
+
+  <!-- Result Modal -->
+  <div id="resultModal" class="modal">
+    <div class="modal-content">
+      <h2>Spin Result!</h2>
+      <div id="resultText" style="font-size:24px; margin:20px 0; color:#27ae60;"></div>
+      <button onclick="closeResultModal()" class="close">Close</button>
+    </div>
   </div>
 </body>
 </html>
