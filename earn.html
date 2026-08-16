@@ -9,6 +9,7 @@
     .card { background:#333; padding:15px; border-radius:8px; width:180px; }
     .card h3 { margin:0 0 10px; font-size:16px; }
     .card button { background:#ff9800; border:none; padding:8px 12px; border-radius:5px; cursor:pointer; }
+    .banned-message { background:#c0392b; padding:20px; border-radius:10px; margin:20px; }
   </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
@@ -36,6 +37,19 @@
         userRef = doc(db, "users", u.uid);
         const snap = await getDoc(userRef);
         if (snap.exists()) userData = snap.data();
+
+        // 🚫 CHECK IF USER IS BANNED
+        if (userData.banned === true) {
+          document.body.innerHTML = `
+            <div class="banned-message">
+              <h1>⛔ Account Banned</h1>
+              <p>Your account has been banned and you cannot access this service.</p>
+              <p>If you believe this is an error, please contact support.</p>
+              <button onclick="logout()" style="background:#ff9800; padding:10px 20px; border:none; border-radius:5px; cursor:pointer;">Logout</button>
+            </div>
+          `;
+          return;
+        }
 
         document.getElementById("greeting").innerText =
           "Hello, " + (userData.userName || "User") + "!";
@@ -115,7 +129,7 @@
       <option value="https://trimz.tv/99-reinforced-wooden-stick?ep=1">+99 Reinforced Wooden Stick</option>
       <option value="https://trimz.tv/slam-jam?ep=1">Slam Jam</option>
       <option value="https://trimz.tv/guardians-of-rokia?ep=1">Guardians of Rokia</option>
-      <option value="https://trimz.tv/lifeexe?ep=1">Life.exe</option> <!-- ✅ fixed link -->
+      <option value="https://trimz.tv/lifeexe?ep=1">Life.exe</option>
     </select>
     <div style="margin-top:20px;">
       <iframe id="seriesFrame" width="640" height="360" frameborder="0" allowfullscreen></iframe>
