@@ -26,7 +26,7 @@
     
     /* Spin the Wheel Styles */
     .wheel-container { position:relative; width:300px; height:300px; margin:20px auto; }
-    .wheel { width:100%; height:100%; border-radius:50%; position:relative; overflow:hidden; box-shadow:0 0 20px rgba(255, 152, 0, 0.5); }
+    .wheel { width:100%; height:100%; border-radius:50%; position:relative; overflow:hidden; box-shadow:0 0 20px rgba(255, 152, 0, 0.5); transform:rotate(0deg); }
     .wheel-segment { position:absolute; width:100%; height:100%; clip-path:polygon(50% 50%, 50% 0%, 100% 0%); transform-origin:50% 50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; color:#fff; }
     .pointer { position:absolute; top:-15px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-top:20px solid #ff9800; z-index:10; }
     .spin-button { background:#27ae60; border:none; padding:12px 30px; border-radius:5px; cursor:pointer; font-size:16px; font-weight:bold; color:#fff; margin:10px; }
@@ -60,6 +60,7 @@
     let userRef, userData = {}, minuteCounter = 0, watching = false, updateInterval;
     let isSpinning = false;
     let currentUserName = "User";
+    let currentRotation = 0;
 
     // Filipino/Bisaya first names for bot claims
     const filipinoNames = [
@@ -123,6 +124,11 @@
         segment.textContent = prize.points + 'pts';
         wheelDiv.appendChild(segment);
       });
+      
+      // Reset rotation
+      currentRotation = 0;
+      wheelDiv.style.transition = 'none';
+      wheelDiv.style.transform = `rotate(${currentRotation}deg)`;
     }
 
     function getRandomPrize() {
@@ -202,17 +208,29 @@
         minuteCounter -= 300;
         await setDoc(userRef, { minuteCounter }, { merge: true });
 
-        // Spin animation
+        // Get the wheel and reset transition
         const wheel = document.getElementById('wheel');
+        wheel.style.transition = 'none';
+        
+        // Reset to base rotation before new spin
+        wheel.style.transform = `rotate(${currentRotation}deg)`;
+        
+        // Force reflow to apply the reset
+        void wheel.offsetWidth;
+        
+        // Now apply the spin animation
         const spins = 10;
         const extraDegrees = Math.floor(Math.random() * 360);
         const totalRotation = spins * 360 + extraDegrees;
-
-        wheel.style.transition = 'transform 3s ease-out';
-        wheel.style.transform = `rotate(${totalRotation}deg)`;
+        
+        wheel.style.transition = 'transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        wheel.style.transform = `rotate(${currentRotation + totalRotation}deg)`;
 
         // Wait for spin to complete
         await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // Update current rotation for next spin
+        currentRotation = (currentRotation + totalRotation) % 360;
 
         // Calculate which prize won
         const winningIndex = Math.floor((360 - (extraDegrees % 360)) / (360 / wheelPrizes.length)) % wheelPrizes.length;
