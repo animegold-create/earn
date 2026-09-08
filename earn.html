@@ -3,7 +3,7 @@
 <head>
   <title>Earn Points - AnimeGold</title>
   <style>
-    body { font-family: Arial, sans-serif; background:#111; color:#fff; text-align:center; }
+    body { font-family: Arial, sans-serif; background:#111; color:#fff; text-align:center; margin:0; padding:0; }
     .section { margin:20px; padding:20px; border-radius:10px; background:#222; }
     .eligibility { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-top:20px; }
     .card { background:#333; padding:15px; border-radius:8px; width:180px; }
@@ -14,12 +14,15 @@
     .status-active { background:#27ae60; }
     .status-inactive { background:#95a5a6; }
     
-    /* Notifications */
-    .notifications-container { position:fixed; top:20px; right:20px; z-index:1000; max-width:400px; }
-    .notification { background:linear-gradient(135deg, #ff9800, #f39c12); padding:15px 20px; border-radius:8px; margin-bottom:10px; animation:slideIn 0.5s ease-out, slideOut 0.5s ease-in 4.5s forwards; box-shadow:0 4px 15px rgba(255, 152, 0, 0.6); border-left:4px solid #fff; }
-    .notification-text { color:#fff; font-weight:bold; font-size:14px; }
-    @keyframes slideIn { from { transform:translateX(500px); opacity:0; } to { transform:translateX(0); opacity:1; } }
-    @keyframes slideOut { from { transform:translateX(0); opacity:1; } to { transform:translateX(500px); opacity:0; } }
+    /* Notifications Banner */
+    .notifications-container { position:fixed; top:0; left:0; right:0; width:100%; z-index:1000; padding:0; margin:0; }
+    .notification { background:linear-gradient(135deg, #ff9800, #f39c12); padding:20px 40px; width:100%; box-sizing:border-box; animation:slideInDown 0.5s ease-out, slideOutUp 0.5s ease-in 4.5s forwards; box-shadow:0 4px 15px rgba(255, 152, 0, 0.6); border-bottom:4px solid #fff; text-align:center; }
+    .notification-text { color:#fff; font-weight:bold; font-size:18px; margin:0; }
+    @keyframes slideInDown { from { transform:translateY(-100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
+    @keyframes slideOutUp { from { transform:translateY(0); opacity:1; } to { transform:translateY(-100%); opacity:0; } }
+    
+    /* Body adjustment for banner */
+    body.notification-active { padding-top:60px; }
     
     /* Spin the Wheel Styles */
     .wheel-container { position:relative; width:300px; height:300px; margin:20px auto; }
@@ -56,6 +59,7 @@
 
     let userRef, userData = {}, minuteCounter = 0, watching = false, updateInterval;
     let isSpinning = false;
+    let currentUserName = "User";
 
     // Filipino/Bisaya first names for bot claims
     const filipinoNames = [
@@ -92,12 +96,17 @@
       const container = document.getElementById('notificationsContainer');
       const notification = document.createElement('div');
       notification.className = 'notification';
-      notification.innerHTML = `<div class="notification-text">${message}</div>`;
+      notification.innerHTML = `<p class="notification-text">${message}</p>`;
       container.appendChild(notification);
+      
+      document.body.classList.add('notification-active');
 
       // Auto remove after 5 seconds
       setTimeout(() => {
         notification.remove();
+        if (container.children.length === 0) {
+          document.body.classList.remove('notification-active');
+        }
       }, 5000);
     }
 
@@ -239,6 +248,9 @@
         const snap = await getDoc(userRef);
         if (snap.exists()) userData = snap.data();
 
+        // Store current user name
+        currentUserName = userData.userName || "User";
+
         // 🚫 CHECK IF USER IS BANNED
         if (userData.banned === true) {
           document.body.innerHTML = `
@@ -253,7 +265,7 @@
         }
 
         document.getElementById("greeting").innerText =
-          "Hello, " + (userData.userName || "User") + "!";
+          "Hello, " + currentUserName + "!";
 
         minuteCounter = userData.minuteCounter || 0;
         createWheel();
@@ -341,11 +353,12 @@
         minuteCounter -= cost * 300;
         await setDoc(userRef, { minuteCounter, pendingEarnings: newPending }, { merge: true });
         
-        // Show user notification
-        showNotification(`🎉 ${data.userName} claimed ₱${cost}!`);
+        // Show user notification with actual name
+        const displayName = data.userName || "User";
+        showNotification(`🎉 ${displayName} claimed ₱${cost}!`);
         
         alert("₱" + cost + " added to Pending Earnings for " +
-              data.userName + " via " + data.payoutMethod + "!");
+              displayName + " via " + data.payoutMethod + "!");
         updateUI();
       } else {
         alert("Not enough points yet!");
@@ -362,7 +375,7 @@
   </script>
 </head>
 <body>
-  <!-- Notifications Container -->
+  <!-- Notifications Banner - Full Width at Top -->
   <div id="notificationsContainer" class="notifications-container"></div>
 
   <h1 id="greeting">Loading...</h1>
