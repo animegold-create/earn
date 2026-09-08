@@ -92,6 +92,39 @@
       return wheelPrizes[0];
     }
 
+    // Set status to inactive when browser closes or tab closes
+    window.addEventListener('beforeunload', async (e) => {
+      if (userRef) {
+        try {
+          await setDoc(userRef, { activityStatus: "inactive" }, { merge: true });
+        } catch (err) {
+          console.error("Error setting status to inactive:", err);
+        }
+      }
+    });
+
+    // Also handle when tab loses focus (optional - set to away)
+    window.addEventListener('blur', async () => {
+      if (watching && userRef) {
+        try {
+          await setDoc(userRef, { activityStatus: "away" }, { merge: true });
+        } catch (err) {
+          console.error("Error setting status to away:", err);
+        }
+      }
+    });
+
+    // When tab regains focus
+    window.addEventListener('focus', async () => {
+      if (watching && userRef) {
+        try {
+          await setDoc(userRef, { activityStatus: "active" }, { merge: true });
+        } catch (err) {
+          console.error("Error setting status to active:", err);
+        }
+      }
+    });
+
     window.spinWheel = async () => {
       const pts = minuteCounter / 300;
       
